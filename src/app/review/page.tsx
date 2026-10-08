@@ -1,75 +1,113 @@
 import Link from "next/link";
-import { ArrowRight, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/question/status-badge";
-import { getReviewQuestions } from "@/lib/questions";
-import { difficultyLabels } from "@/lib/utils";
+import { Empty } from "@/components/ui/empty";
+import { QuestionList } from "@/components/question/question-list";
+import { getDueReviewQuestions, getReviewQuestions } from "@/lib/questions";
+import { cn } from "@/lib/utils";
+import { getRequestTime } from "@/lib/request-time";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReviewPage() {
-  const rows = await getReviewQuestions();
-  const unknown = rows.filter((row) => row.status === "unknown").length;
-  const fuzzy = rows.filter((row) => row.status === "fuzzy").length;
+export default async function ReviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const weakView = params.view === "weak";
+  const [due, weak] = await Promise.all([
+    getDueReviewQuestions(),
+    getReviewQuestions(),
+  ]);
+  const rows = weakView ? weak : due;
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="page-stack">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-semibold">复习</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            先处理不会，再巩固模糊；标记掌握后题目会离开复习列表。
+          <h1 className="page-title">复习安排</h1>
+          <p className="page-description">
+            {weakView
+              ? "先巩固不会的题目，再练模糊的知识点。"
+              : "按到期时间巩固记忆，已掌握的题目也会按计划回来。"}
           </p>
         </div>
-        {rows.length > 0 && (
+        {rows.length ? (
           <Button asChild>
-            <Link href="/practice/session?mode=weak&includeFuzzy=1">
-              <RotateCcw className="size-4" />
-              开始复习
-            </Link>
-          </Button>
-        )}
-      </div>
-      <div className="flex gap-5 border-b border-border pb-4 text-sm">
-        <span className="text-rose-700 dark:text-rose-300">
-          不会 <strong className="tabular-nums">{unknown}</strong>
-        </span>
-        <span className="text-amber-700 dark:text-amber-300">
-          模糊 <strong className="tabular-nums">{fuzzy}</strong>
-        </span>
-      </div>
-      {rows.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="font-medium">暂无待复习题目</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            刷题时标记“不会”或“模糊”，题目就会出现在这里。
-          </p>
-          <Button className="mt-5" asChild>
-            <Link href="/practice">去刷题</Link>
-          </Button>
-        </div>
-      ) : (
-        <div className="border-t border-border">
-          {rows.map(({ question, status }) => (
             <Link
-              key={question.id}
-              href={`/questions/${question.id}`}
-              className="group flex items-start justify-between gap-4 border-b border-border py-5 hover:text-accent"
+              prefetch={false}
+              href={
+                weakView
+                  ? "/practice/session?mode=weak&includeFuzzy=1"
+                  : "/practice/session?mode=due"
+              }
             >
-              <div className="min-w-0">
-                <h2 className="font-medium leading-6">{question.question}</h2>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {question.category} / {question.subcategory} ·{" "}
-                  {difficultyLabels[question.difficulty]}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <StatusBadge status={status} />
-                <ArrowRight className="hidden size-4 text-muted-foreground sm:block" />
-              </div>
+              <RotateCcw data-icon="inline-start" />
+              开始{weakView ? "薄弱题" : "到期"}复习
             </Link>
-          ))}
-        </div>
+          </Button>
+        ) : null}
+      </div>
+      <nav aria-label="复习范围" className="segmented-control">
+        {[
+          {
+            href: "/review",
+            label: "到期复习",
+            count: due.length,
+            selected: !weakView,
+          },
+          {
+            href: "/review?view=weak",
+            label: "全部薄弱题",
+            count: weak.length,
+            selected: weakView,
+          },
+        ].map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-current={tab.selected ? "page" : undefined}
+            className={cn(
+              "flex min-h-11 items-center justify-center gap-2 rounded-sm px-4 text-sm text-muted-foreground transition-colors hover:bg-muted",
+              tab.selected && "bg-surface font-medium text-accent",
+            )}
+          >
+            <span>{tab.label}</span>
+            <span className="tabular-nums">{tab.count}</span>
+          </Link>
+        ))}
+      </nav>
+      {rows.length === 0 ? (
+        <Empty
+          title={weakView ? "暂无薄弱题目" : "暂时没有到期题目"}
+          description={
+            weakView
+              ? "练习时选择不会或模糊，题目就会进入薄弱题列表。"
+              : "复习进度已跟上。可以练习新题，或继续巩固薄弱知识点。"
+          }
+        >
+          <Button asChild>
+            <Link
+              href={
+                !weakView && weak.length ? "/review?view=weak" : "/practice"
+              }
+            >
+              {!weakView && weak.length ? "练习薄弱题" : "开始练习"}
+            </Link>
+          </Button>
+        </Empty>
+      ) : (
+        <QuestionList rows={rows} review now={getRequestTime()} />
       )}
+      <div className="flex flex-col gap-1 text-xs leading-6 text-muted-foreground">
+        <p>
+          完成后安排下次复习：不会 1 天，模糊 3 天；连续掌握按 1 / 3 / 7 / 14
+          天递增。
+        </p>
+        <p>
+          时间均为北京时间。只调整掌握状态不会改变时间，尚无安排的题目需要先完成一次练习。
+        </p>
+      </div>
     </div>
   );
 }

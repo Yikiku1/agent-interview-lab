@@ -1,82 +1,207 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, RotateCcw } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Check,
+  ChevronDown,
+  LoaderCircle,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { MarkdownAnswer } from "@/components/question/markdown-answer";
+import { MasteryControl } from "@/components/question/mastery-control";
 import { StatusBadge } from "@/components/question/status-badge";
-import { actions, saveProgress } from "@/components/question/status-actions";
+import { saveProgress } from "@/components/question/status-actions";
 import type { Question, QuestionStatus } from "@/db/schema";
 import { cn, difficultyLabels } from "@/lib/utils";
+import {
+  roundLocation,
+  snapshotSession,
+  type PracticeMode,
+  type RoundCompletion,
+} from "@/lib/practice-session";
+import { MAX_ANSWER_LENGTH } from "@/lib/practice-draft";
+import { reviewDateLabel } from "@/lib/review-schedule";
+import { usePracticeAnswer } from "@/components/practice/use-practice-answer";
+import { RoundSummary } from "@/components/practice/round-summary";
 
 type Row = { question: Question; status: QuestionStatus | null };
+const modeLabels = {
+  due: "到期复习",
+  weak: "薄弱题练习",
+  random: "随机练习",
+  sequential: "顺序练习",
+};
 
 export function PracticeSession({
   rows,
   initialIndex,
   mode,
+  roundId,
+  initialCompletions,
+  initialFinished,
+  referenceTime,
 }: {
   rows: Row[];
   initialIndex: number;
-  mode: "random" | "weak" | "sequential";
+  mode: PracticeMode;
+  roundId: string;
+  initialCompletions: RoundCompletion[];
+  initialFinished: boolean;
+  referenceTime: number;
 }) {
   const [index, setIndex] = useState(initialIndex);
   const [revealed, setRevealed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [finished, setFinished] = useState(initialFinished);
+  const [lastSaved, setLastSaved] = useState<RoundCompletion | null>(null);
+  const [statusFeedback, setStatusFeedback] = useState<{
+    questionId: number;
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const focusOnNavigate = useRef(false);
+  const [completions, setCompletions] = useState<
+    Record<number, RoundCompletion>
+  >(() =>
+    Object.fromEntries(
+      initialCompletions.map((item) => [item.questionId, item]),
+    ),
+  );
+  const ids = useMemo(() => rows.map((row) => row.question.id), [rows]);
   const [statuses, setStatuses] = useState<
     Record<number, QuestionStatus | null>
   >(() => Object.fromEntries(rows.map((row) => [row.question.id, row.status])));
   const current = rows[index];
   const status = statuses[current.question.id] ?? null;
-
+  const position = useCallback(
+    (nextIndex: number, showSummary = false) => {
+      const bounded = Math.min(rows.length - 1, Math.max(0, nextIndex));
+      window.history.replaceState(
+        null,
+        "",
+        roundLocation(
+          window.location.href,
+          roundId,
+          ids,
+          rows[bounded].question.id,
+          showSummary,
+        ),
+      );
+      focusOnNavigate.current = true;
+      setIndex(bounded);
+      setFinished(showSummary);
+      setRevealed(false);
+      setStatusFeedback(null);
+    },
+    [rows, ids, roundId],
+  );
+  const answer = usePracticeAnswer(
+    current.question.id,
+    roundId,
+    status,
+    saving,
+    completions[current.question.id],
+    (completed) => {
+      setStatuses((old) => ({
+        ...old,
+        [completed.questionId]: completed.status,
+      }));
+      setCompletions((old) => ({ ...old, [completed.questionId]: completed }));
+      setLastSaved(completed);
+      if (index === rows.length - 1) position(index, true);
+      else position(index + 1);
+    },
+  );
   const go = useCallback(
     (direction: number) => {
-      setIndex((currentIndex) =>
-        Math.min(rows.length - 1, Math.max(0, currentIndex + direction)),
-      );
-      setRevealed(false);
+      if (saving || answer.submitting) return;
+      if (direction > 0 && index === rows.length - 1) position(index, true);
+      else position(index + direction);
     },
-    [rows.length],
+    [rows.length, index, position, saving, answer.submitting],
   );
-
   const choose = useCallback(
     async (next: QuestionStatus) => {
-      if (!revealed || saving) return;
+      if (
+        saving ||
+        answer.submitting ||
+        (answer.draft.submission && !answer.draft.completed)
+      )
+        return;
       const id = current.question.id;
       const previous = statuses[id] ?? null;
       setStatuses((old) => ({ ...old, [id]: next }));
       setSaving(true);
+      setStatusFeedback(null);
       try {
         await saveProgress(id, next);
-        toast.success("已记录掌握状态");
+        setStatusFeedback({
+          questionId: id,
+          success: true,
+          message: "自评已保存，完成本题后计入这次练习。",
+        });
       } catch (error) {
         setStatuses((old) => ({ ...old, [id]: previous }));
-        toast.error(error instanceof Error ? error.message : "保存失败");
+        const message = error instanceof Error ? error.message : "保存失败";
+        setStatusFeedback({
+          questionId: id,
+          success: false,
+          message: `${message}，请重新选择自评。`,
+        });
+        toast.error(message);
       } finally {
         setSaving(false);
       }
     },
-    [current.question.id, revealed, saving, statuses],
+    [
+      current.question.id,
+      saving,
+      statuses,
+      answer.submitting,
+      answer.draft.submission,
+      answer.draft.completed,
+    ],
   );
 
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    query.delete("index");
-    localStorage.setItem(
-      "practice:last",
-      JSON.stringify({
-        url: `${window.location.pathname}?${query.toString()}`,
-        index,
-      }),
-    );
-  }, [index]);
-
+    try {
+      localStorage.setItem(
+        "practice:last",
+        JSON.stringify(
+          snapshotSession(
+            window.location.href,
+            rows.map((row) => row.question.id),
+            current.question.id,
+          ),
+        ),
+      );
+    } catch {
+      /* The URL still preserves the current queue and position. */
+    }
+  }, [rows, current.question.id, finished]);
+  useEffect(() => {
+    if (!focusOnNavigate.current) return;
+    focusOnNavigate.current = false;
+    document
+      .getElementById(finished ? "round-summary-title" : "question-title")
+      ?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [index, finished]);
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement;
       if (
+        finished ||
         ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
         target.isContentEditable ||
         event.altKey ||
@@ -92,7 +217,7 @@ export function PracticeSession({
         event.preventDefault();
         go(1);
       }
-      if (event.code === "Space") {
+      if (event.code === "Space" && !["BUTTON", "A"].includes(target.tagName)) {
         event.preventDefault();
         setRevealed((value) => !value);
       }
@@ -102,149 +227,306 @@ export function PracticeSession({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [choose, go]);
+  }, [choose, go, finished]);
+
+  if (finished)
+    return (
+      <RoundSummary
+        questions={rows.map((row) => row.question)}
+        completions={completions}
+        onResume={(id) => position(ids.indexOf(id))}
+        referenceTime={referenceTime}
+      />
+    );
+
+  const busy = saving || answer.submitting;
+  const feedback =
+    statusFeedback?.questionId === current.question.id ? statusFeedback : null;
+  const draftMessage = answer.submitting
+    ? "正在保存本次练习，请稍候…"
+    : answer.draft.completed
+      ? "本题已完成，回答和自评已保存。"
+      : answer.draft.failure
+        ? `${answer.draft.failure.message}。回答已保留，请恢复编辑后重新提交。`
+        : answer.draft.submission
+          ? `${answer.saveError ?? "上次保存尚未确认"}。回答已保留，可以重试保存。`
+          : !answer.storageAvailable
+            ? "草稿暂时无法自动保存，请保持页面打开。"
+            : answer.draft.answer
+              ? "草稿已自动保存，切题或刷新后可以继续。"
+              : "支持口头作答；填写文字会自动保存草稿。";
+  const draftTone = answer.submitting
+    ? "neutral"
+    : answer.draft.completed
+      ? "success"
+      : answer.draft.failure
+        ? "danger"
+        : answer.draft.submission || !answer.storageAvailable
+          ? "warning"
+          : "neutral";
 
   return (
-    <div className="space-y-5">
+    <div className="reading-column flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground">
-            {mode === "weak"
-              ? "薄弱题复习"
-              : mode === "random"
-                ? "随机刷题"
-                : "顺序刷题"}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <p className="text-sm font-medium">{modeLabels[mode]}</p>
+          <p
+            className="text-xs tabular-nums text-muted-foreground"
+            aria-live="polite"
+          >
+            已完成 {Object.keys(completions).length} / {rows.length} 题
           </p>
-          <h1 className="mt-1 text-xl font-semibold">
-            第 {index + 1} / {rows.length} 题
-          </h1>
         </div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/practice">
-            <RotateCcw className="size-4" />
-            重新筛选
-          </Link>
-        </Button>
+        <div className="ml-auto flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => position(index, true)}
+          >
+            结束本轮
+          </Button>
+          {busy ? (
+            <Button variant="ghost" size="sm" disabled>
+              调整范围
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/practice">
+                <RotateCcw data-icon="inline-start" />
+                调整范围
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-accent transition-[width]"
-          style={{ width: `${((index + 1) / rows.length) * 100}%` }}
-        />
-      </div>
-      <div className="grid min-h-[530px] overflow-hidden rounded-md border border-border bg-surface md:grid-cols-[210px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="grid grid-cols-2 gap-4 border-b border-border bg-muted/50 p-5 text-sm md:block md:border-b-0 md:border-r md:p-6">
-          <div className="md:mb-8">
-            <p className="text-xs text-muted-foreground">分类</p>
-            <p className="mt-1 font-medium">{current.question.category}</p>
-            <p className="text-xs text-muted-foreground">
-              {current.question.subcategory}
-            </p>
-          </div>
-          <div className="md:mb-8">
-            <p className="text-xs text-muted-foreground">难度</p>
-            <p className="mt-1 font-medium">
-              {difficultyLabels[current.question.difficulty]}
-            </p>
-          </div>
-          <div className="md:mb-8">
-            <p className="text-xs text-muted-foreground">当前状态</p>
-            <div className="mt-2">
-              <StatusBadge status={status} />
-            </div>
-          </div>
+      <Progress
+        value={(Object.keys(completions).length / rows.length) * 100}
+        label="本轮完成进度"
+      />
+      {lastSaved ? (
+        <Alert tone="success">
+          <Check />
+          <span>
+            上一题已完成，回答已保存。
+            {lastSaved.nextReviewAt
+              ? `下次复习：${reviewDateLabel(lastSaved.nextReviewAt)}。`
+              : ""}
+          </span>
+        </Alert>
+      ) : null}
+      <article
+        className="panel practice-panel"
+        aria-labelledby="question-title"
+      >
+        <div className="practice-info">
+          <span className="font-medium text-foreground">
+            {current.question.category}
+          </span>
+          <span>{current.question.subcategory}</span>
+          <span aria-hidden="true">·</span>
+          <span>{difficultyLabels[current.question.difficulty]}</span>
+          <StatusBadge status={status} />
+          {answer.draft.completed ? <Badge>本题已完成</Badge> : null}
+          <span className="ml-auto whitespace-nowrap font-medium tabular-nums text-foreground">
+            第 {index + 1} / {rows.length} 题
+          </span>
+        </div>
+        <div className="practice-content">
           <div>
-            <p className="text-xs text-muted-foreground">进度</p>
-            <p className="mt-1 font-mono text-sm tabular-nums">
-              {index + 1} / {rows.length}
-            </p>
-          </div>
-        </aside>
-        <div className="flex min-w-0 flex-col">
-          <div className="flex-1 p-5 sm:p-7 lg:p-9">
-            <p className="mb-4 font-mono text-xs uppercase text-accent">
-              Question {String(index + 1).padStart(2, "0")}
-            </p>
-            <h2 className="max-w-3xl text-xl font-semibold leading-9 sm:text-2xl">
+            <h1 id="question-title" tabIndex={-1} className="question-title">
               {current.question.question}
-            </h2>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {current.question.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground"
-                >
-                  {tag}
+            </h1>
+            {current.question.tags.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {current.question.tags.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <section
+            aria-labelledby="answer-label"
+            className="flex flex-col gap-3"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <label
+                id="answer-label"
+                htmlFor="practice-answer"
+                className="text-sm font-medium"
+              >
+                我的回答{" "}
+                <span className="font-normal text-muted-foreground">
+                  （选填）
                 </span>
-              ))}
+              </label>
+              <span
+                id="answer-count"
+                className="text-xs tabular-nums text-muted-foreground"
+              >
+                {answer.draft.answer.length} / {MAX_ANSWER_LENGTH}
+              </span>
             </div>
-            <div className="mt-8 border-t border-border pt-6">
+            <textarea
+              id="practice-answer"
+              value={answer.draft.answer}
+              onChange={(event) => answer.updateAnswer(event.target.value)}
+              disabled={Boolean(answer.draft.submission)}
+              maxLength={MAX_ANSWER_LENGTH}
+              rows={6}
+              placeholder="先写下思路、关键步骤和例子，再对照参考答案。"
+              aria-describedby="answer-note answer-count"
+              className="control practice-answer"
+            />
+            <Alert id="answer-note" tone={draftTone}>
+              {answer.submitting ? (
+                <LoaderCircle className="animate-spin" />
+              ) : answer.draft.completed ? (
+                <Check />
+              ) : answer.draft.submission || !answer.storageAvailable ? (
+                <AlertCircle />
+              ) : null}
+              <span>{draftMessage}</span>
+            </Alert>
+          </section>
+          <div>
+            <Button
+              variant="secondary"
+              onClick={() => setRevealed((value) => !value)}
+              aria-expanded={revealed}
+              aria-controls="reference-answer"
+            >
+              <BookOpen data-icon="inline-start" />
+              {revealed ? "收起参考答案" : "展开参考答案"}
+              <ChevronDown
+                data-icon="inline-end"
+                className={cn("transition-transform", revealed && "rotate-180")}
+              />
+            </Button>
+          </div>
+          <section
+            id="reference-answer"
+            hidden={!revealed}
+            aria-labelledby="reference-title"
+            className={revealed ? "reference-answer" : undefined}
+          >
+            {revealed ? (
+              <>
+                <h2 id="reference-title" className="section-title">
+                  参考答案
+                </h2>
+                <MarkdownAnswer>{current.question.answer}</MarkdownAnswer>
+              </>
+            ) : null}
+          </section>
+        </div>
+        <div className="practice-actions">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="flex w-full flex-col gap-3 sm:w-auto">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-sm font-medium">自评</h2>
+                <span className="text-xs text-muted-foreground">
+                  选择当前的掌握程度
+                </span>
+              </div>
+              <MasteryControl
+                className="practice-assessment"
+                status={status}
+                disabled={
+                  busy ||
+                  Boolean(answer.draft.submission && !answer.draft.completed)
+                }
+                onChoose={(next) => void choose(next)}
+              />
+            </div>
+            {answer.draft.failure ? (
+              <Button className="practice-complete" onClick={answer.recover}>
+                保留回答并恢复编辑
+              </Button>
+            ) : answer.draft.completed ? (
               <Button
                 variant="secondary"
-                onClick={() => setRevealed((value) => !value)}
+                className="practice-complete"
+                onClick={answer.restart}
               >
-                {revealed ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
-                {revealed ? "隐藏答案" : "查看答案"}
+                <RotateCcw data-icon="inline-start" />
+                再练一次
               </Button>
-              {revealed && (
-                <div className="mt-7">
-                  <h3 className="text-xs font-semibold uppercase text-muted-foreground">
-                    参考答案
-                  </h3>
-                  <MarkdownAnswer>{current.question.answer}</MarkdownAnswer>
-                </div>
-              )}
-            </div>
+            ) : (
+              <Button
+                className="practice-complete"
+                onClick={() => void answer.complete()}
+                disabled={!status || busy}
+                aria-busy={answer.submitting}
+              >
+                {answer.submitting ? (
+                  <LoaderCircle
+                    className="animate-spin"
+                    data-icon="inline-start"
+                  />
+                ) : (
+                  <Check data-icon="inline-start" />
+                )}
+                {answer.submitting
+                  ? "正在保存…"
+                  : answer.draft.submission
+                    ? "重试保存"
+                    : "完成本题"}
+              </Button>
+            )}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border px-5 py-4 sm:px-7 lg:px-9">
-            <div className="flex flex-wrap gap-2" aria-label="标记掌握程度">
-              {actions.map(({ status: next, label, icon: Icon, style }) => (
-                <button
-                  key={next}
-                  type="button"
-                  title={revealed ? `标记为${label}` : "请先查看答案"}
-                  disabled={!revealed || saving}
-                  onClick={() => void choose(next)}
-                  className={cn(
-                    "inline-flex h-9 min-w-18 items-center justify-center gap-1.5 rounded-md border bg-surface px-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-                    style,
-                    status === next &&
-                      "ring-2 ring-current ring-offset-2 ring-offset-surface",
-                  )}
-                >
-                  <Icon className="size-4" />
-                  {label}
-                </button>
-              ))}
-            </div>
+          <Alert tone={feedback && !feedback.success ? "danger" : "neutral"}>
+            {saving ? (
+              <LoaderCircle className="animate-spin" />
+            ) : feedback?.success ? (
+              <Check />
+            ) : feedback ? (
+              <AlertCircle />
+            ) : null}
+            <span>
+              {saving
+                ? "正在保存自评…"
+                : (feedback?.message ??
+                  (answer.draft.completed
+                    ? "本次练习已计入统计。切题可以回看，再练一次可以重新作答。"
+                    : !status
+                      ? "先选择自评，再完成本题。切题会保留草稿。"
+                      : "完成本题会保存回答、记录这次练习，并进入下一题。"))}
+            </span>
+          </Alert>
+          <div className="practice-navigation">
+            <Link
+              href={`/questions/${current.question.id}#history`}
+              prefetch={false}
+              className="subtle-link min-h-11"
+            >
+              回看历史回答
+            </Link>
             <div className="flex gap-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => go(-1)}
-                disabled={index === 0}
+                disabled={index === 0 || busy}
               >
-                <ArrowLeft className="size-4" />
+                <ArrowLeft data-icon="inline-start" />
                 上一题
               </Button>
               <Button
+                variant="secondary"
                 size="sm"
                 onClick={() => go(1)}
-                disabled={index === rows.length - 1}
+                disabled={busy}
               >
-                下一题
-                <ArrowRight className="size-4" />
+                {index === rows.length - 1 ? "查看总结" : "下一题"}
+                <ArrowRight data-icon="inline-end" />
               </Button>
             </div>
           </div>
         </div>
-      </div>
-      <p className="text-center text-xs text-muted-foreground">
-        ← → 切题 · Space 显示答案 · 1 不会 · 2 模糊 · 3 掌握
+      </article>
+      <p className="hidden text-center text-xs text-muted-foreground sm:block">
+        ← → 切题 · Space 展开答案 · 1 不会 · 2 模糊 · 3 掌握
       </p>
     </div>
   );

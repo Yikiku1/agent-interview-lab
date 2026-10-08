@@ -1,122 +1,110 @@
 import Link from "next/link";
 import { ArrowRight, BookOpen, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatsStrip } from "@/components/ui/stats-strip";
 import { ContinueButton } from "@/components/practice/continue-button";
+import { CategoryProgress } from "@/components/question/category-progress";
 import { getDashboard } from "@/lib/questions";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const stats = await getDashboard();
-  const metrics = [
-    { label: "今日刷题", value: stats.todayReviews, detail: "次练习" },
-    { label: "总刷题", value: stats.totalReviews, detail: "次练习" },
-    { label: "已掌握", value: stats.mastered, detail: "道题" },
-    { label: "模糊", value: stats.fuzzy, detail: "道题" },
-    { label: "不会", value: stats.unknown, detail: "道题" },
-  ];
   return (
-    <div className="space-y-9">
-      <div className="flex flex-wrap items-end justify-between gap-5 border-b border-border pb-7">
+    <div className="page-stack">
+      <section className="panel home-focus" aria-labelledby="home-title">
         <div>
-          <p className="mb-2 font-mono text-xs font-medium uppercase text-accent">
-            Interview workspace
+          <h1 id="home-title" className="page-title">
+            开始今天的练习
+          </h1>
+          <p className="page-description">
+            专注 Agent 与 LLM
+            应用开发面试。先用自己的话回答，再对照答案，逐步补齐薄弱环节。
           </p>
-          <h1 className="text-2xl font-semibold sm:text-3xl">面试训练台</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-            专注 Agent 开发与 LLM 应用开发面试。选一组题目，思考、核对答案，再记录掌握程度。
-          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/practice">
+                <BookOpen data-icon="inline-start" />
+                开始练习
+              </Link>
+            </Button>
+            <ContinueButton />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/practice">
-              <BookOpen className="size-4" />
-              开始刷题
-            </Link>
-          </Button>
-          <ContinueButton />
-        </div>
-      </div>
-
-      <section aria-labelledby="overview-title">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 id="overview-title" className="text-base font-semibold">
-            练习概览
-          </h2>
-          <Link href="/stats" className="text-sm text-accent hover:underline">
-            查看统计 <ArrowRight className="inline size-3" />
+        <div className="home-review">
+          <div>
+            <h2 className="text-sm font-medium">到期复习</h2>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">
+              {stats.dueReviews ? (
+                <>
+                  <strong className="text-lg font-semibold tabular-nums text-foreground">
+                    {stats.dueReviews}
+                  </strong>{" "}
+                  道题等待复习
+                </>
+              ) : (
+                "今天的复习已跟上进度"
+              )}
+            </p>
+          </div>
+          <Link
+            href={stats.dueReviews ? "/practice/session?mode=due" : "/review"}
+            prefetch={false}
+            className="subtle-link min-h-11"
+          >
+            {stats.dueReviews ? "开始到期复习" : "查看复习安排"}
+            <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {metrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="rounded-md border border-border bg-surface p-4 sm:p-5"
-            >
-              <p className="text-xs text-muted-foreground">{metric.label}</p>
-              <p className="mt-3 text-2xl font-semibold tabular-nums">
-                {metric.value}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {metric.detail}
-              </p>
-            </div>
-          ))}
+      </section>
+      <section aria-labelledby="overview-title">
+        <div className="section-heading">
+          <h2 id="overview-title" className="section-title">
+            练习概览
+          </h2>
+          <Link href="/stats" className="subtle-link">
+            查看统计
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+        <StatsStrip
+          metrics={[
+            { label: "今日练习", value: stats.todayReviews, unit: "次" },
+            { label: "累计练习", value: stats.totalReviews, unit: "次" },
+            {
+              label: "已掌握",
+              value: stats.mastered,
+              unit: "题",
+              status: "mastered",
+            },
+            { label: "待巩固", value: stats.fuzzy + stats.unknown, unit: "题" },
+          ]}
+        />
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>
+            模糊 {stats.fuzzy} · 不会 {stats.unknown}
+          </span>
+          {stats.fuzzy + stats.unknown > 0 ? (
+            <Link href="/review?view=weak" className="subtle-link">
+              <RotateCcw className="size-3.5" aria-hidden="true" />
+              练习薄弱题
+            </Link>
+          ) : (
+            <span>完成练习后会自动安排下次复习</span>
+          )}
         </div>
       </section>
-
       <section aria-labelledby="categories-title">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 id="categories-title" className="text-base font-semibold">
+        <div className="section-heading">
+          <h2 id="categories-title" className="section-title">
             分类进度
           </h2>
           <span className="text-xs text-muted-foreground">
             掌握率 = 已掌握 / 已标记
           </span>
         </div>
-        <div className="grid gap-x-8 gap-y-1 md:grid-cols-2">
-          {stats.byCategory.map((item) => (
-            <Link
-              key={item.category}
-              href={`/questions?category=${encodeURIComponent(item.category)}`}
-              className="group flex items-center gap-4 border-b border-border py-4 hover:text-accent"
-            >
-              <span className="w-20 shrink-0 text-sm font-medium">
-                {item.category}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-accent"
-                    style={{ width: `${item.rate}%` }}
-                  />
-                </div>
-              </div>
-              <span className="w-20 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-                {item.marked}/{item.total} 已刷
-              </span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground group-hover:text-accent" />
-            </Link>
-          ))}
-        </div>
+        <CategoryProgress categories={stats.byCategory} />
       </section>
-
-      {stats.unknown + stats.fuzzy > 0 && (
-        <section className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
-          <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground">
-              {stats.unknown + stats.fuzzy} 道
-            </strong>
-            薄弱题目等待复习
-          </p>
-          <Button variant="secondary" asChild>
-            <Link href="/review">
-              <RotateCcw className="size-4" />
-              进入复习
-            </Link>
-          </Button>
-        </section>
-      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@ import { ragTopics } from "./expansion-rag";
 import { appTopics } from "./expansion-app";
 import { foundationTopics } from "./expansion-foundations";
 import { appliedTopics } from "./expansion-applied";
+import { basicQuestions } from "./basic-questions";
+import { coreAnswers } from "./core-answers";
 
 type Difficulty = Question["difficulty"];
 type Entry = [
@@ -1222,7 +1224,7 @@ export function getSeedQuestions(): SeedQuestion[] {
       })
       .filter((row) => !retiredOriginalQuestions.has(row.question));
   });
-  return [
+  const rows = [
     ...originals,
     ...expandTopics([
       ...agentTopics,
@@ -1232,5 +1234,20 @@ export function getSeedQuestions(): SeedQuestion[] {
       ...foundationTopics,
       ...appliedTopics,
     ]),
+    ...basicQuestions,
   ];
+  for (const question of Object.keys(coreAnswers)) {
+    if (!rows.some((row) => row.question === question)) {
+      throw new Error(`Core answer has no matching question: ${question}`);
+    }
+  }
+  return rows.map((row) =>
+    coreAnswers[row.question]
+      ? {
+          ...row,
+          answer: coreAnswers[row.question],
+          tags: [...row.tags, "核心精修"],
+        }
+      : row,
+  );
 }

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { questions, reviewEvents, userQuestionProgress } from "@/db/schema";
+import { questions, userQuestionProgress } from "@/db/schema";
 import { DEFAULT_USER_ID } from "@/lib/questions";
 
 const payload = z.object({
-  questionId: z.number().int().positive(),
+  questionId: z.number().int().positive().max(2147483647),
   status: z.enum(["mastered", "fuzzy", "unknown"]),
 });
 
@@ -24,30 +24,20 @@ export async function PUT(request: Request) {
     const [question] = await db
       .select({ id: questions.id })
       .from(questions)
-      .where(eq(questions.id, questionId))
+      .where(and(eq(questions.id, questionId), eq(questions.active, true)))
       .limit(1);
     if (!question)
       return NextResponse.json({ error: "题目不存在" }, { status: 404 });
-    await db.transaction(async (tx) => {
-      await tx
-        .insert(userQuestionProgress)
-        .values({ userId: DEFAULT_USER_ID, questionId, status, reviewCount: 1 })
-        .onConflictDoUpdate({
-          target: [
-            userQuestionProgress.userId,
-            userQuestionProgress.questionId,
-          ],
-          set: {
-            status,
-            reviewCount: sql`${userQuestionProgress.reviewCount} + 1`,
-            lastReviewedAt: new Date(),
-            updatedAt: new Date(),
-          },
-        });
-      await tx
-        .insert(reviewEvents)
-        .values({ userId: DEFAULT_USER_ID, questionId, status });
-    });
+    await db
+      .insert(userQuestionProgress)
+      .values({ userId: DEFAULT_USER_ID, questionId, status, reviewCount: 0 })
+      .onConflictDoUpdate({
+        target: [userQuestionProgress.userId, userQuestionProgress.questionId],
+        set: {
+          status,
+          updatedAt: new Date(),
+        },
+      });
     return NextResponse.json({ status });
   } catch {
     return NextResponse.json(

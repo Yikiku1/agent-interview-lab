@@ -1,75 +1,74 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatsStrip } from "@/components/ui/stats-strip";
+import { CategoryProgress } from "@/components/question/category-progress";
 import { getDashboard } from "@/lib/questions";
 
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
   const stats = await getDashboard();
-  const summary = [
-    ["总题目", stats.total],
-    ["已刷", stats.brushed],
-    ["已掌握", stats.mastered],
-    ["模糊", stats.fuzzy],
-    ["不会", stats.unknown],
-  ] as const;
+  const weak = stats.fuzzy + stats.unknown;
   return (
-    <div className="space-y-9">
-      <div>
-        <h1 className="text-2xl font-semibold">学习统计</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          累计练习 {stats.totalReviews} 次，今日 {stats.todayReviews} 次。
-        </p>
-      </div>
-      <section>
-        <h2 className="mb-4 text-base font-semibold">总体进度</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {summary.map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-md border border-border bg-surface p-5"
-            >
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className="mt-3 text-2xl font-semibold tabular-nums">
-                {value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-      <section>
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-          <h2 className="text-base font-semibold">分类掌握率</h2>
-          <p className="text-xs text-muted-foreground">
-            已掌握题目数 / 已标记题目数；未刷题目不计入分母
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">学习统计</h1>
+          <p className="page-description">
+            累计练习{" "}
+            <strong className="font-medium text-foreground">
+              {stats.totalReviews}
+            </strong>{" "}
+            次，今日{" "}
+            <strong className="font-medium text-foreground">
+              {stats.todayReviews}
+            </strong>{" "}
+            次。每完成一题，都会积累一次练习。
           </p>
         </div>
-        <div className="border-t border-border">
-          {stats.byCategory.map((item) => (
-            <div
-              key={item.category}
-              className="grid grid-cols-[72px_minmax(0,1fr)_54px] items-center gap-4 border-b border-border py-4 sm:grid-cols-[120px_minmax(0,1fr)_110px_60px]"
-            >
-              <div className="text-sm font-medium">{item.category}</div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{ width: `${item.rate}%` }}
-                />
-              </div>
-              <div className="hidden text-right text-xs tabular-nums text-muted-foreground sm:block">
-                {item.mastered} / {item.marked} 已标记
-              </div>
-              <div className="text-right text-sm font-semibold tabular-nums">
-                {item.marked ? `${item.rate}%` : "—"}
-              </div>
-            </div>
-          ))}
+        <Button asChild>
+          <Link href={weak ? "/review?view=weak" : "/practice"}>
+            {weak ? "巩固薄弱题" : "开始练习"}
+            <ArrowRight data-icon="inline-end" />
+          </Link>
+        </Button>
+      </div>
+      <section aria-labelledby="stats-overview-title">
+        <div className="section-heading">
+          <h2 id="stats-overview-title" className="section-title">
+            总体进度
+          </h2>
         </div>
+        <StatsStrip
+          metrics={[
+            { label: "题库总数", value: stats.total },
+            { label: "已标记", value: stats.marked },
+            { label: "已掌握", value: stats.mastered, status: "mastered" },
+            { label: "模糊", value: stats.fuzzy, status: "fuzzy" },
+            { label: "不会", value: stats.unknown, status: "unknown" },
+            { label: "到期复习", value: stats.dueReviews },
+          ]}
+        />
       </section>
-      <Button asChild>
-        <Link href="/practice">继续刷题</Link>
-      </Button>
+      <section aria-labelledby="stats-category-title">
+        <div className="section-heading">
+          <h2 id="stats-category-title" className="section-title">
+            分类掌握率
+          </h2>
+          <span className="text-xs text-muted-foreground">已掌握 / 已标记</span>
+        </div>
+        <CategoryProgress categories={stats.byCategory} detailed />
+        <p className="mt-3 text-xs leading-6 text-muted-foreground">
+          未标记的题目不计入掌握率；点击分类可以查看对应题目。
+        </p>
+      </section>
+      <p className="text-xs leading-6 text-muted-foreground">
+        调整掌握状态不增加练习次数。
+        {stats.legacyReviews > 0
+          ? `累计次数包含旧版状态记录 ${stats.legacyReviews} 次。`
+          : ""}
+      </p>
     </div>
   );
 }

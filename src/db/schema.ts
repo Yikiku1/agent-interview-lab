@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   pgEnum,
@@ -7,6 +8,8 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -34,6 +37,7 @@ export const questions = pgTable(
     subcategory: varchar("subcategory", { length: 64 }).notNull(),
     difficulty: difficultyEnum("difficulty").notNull(),
     tags: text("tags").array().notNull().default([]),
+    active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -52,9 +56,11 @@ export const userQuestionProgress = pgTable(
       .references(() => users.id),
     questionId: integer("question_id")
       .notNull()
-      .references(() => questions.id, { onDelete: "cascade" }),
+      .references(() => questions.id, { onDelete: "restrict" }),
     status: statusEnum("status").notNull(),
     reviewCount: integer("review_count").notNull().default(0),
+    reviewStage: integer("review_stage").notNull().default(0),
+    nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
     lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -65,7 +71,10 @@ export const userQuestionProgress = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.userId, table.questionId] })],
+  (table) => [
+    primaryKey({ columns: [table.userId, table.questionId] }),
+    index("progress_review_due_idx").on(table.userId, table.nextReviewAt),
+  ],
 );
 
 export const reviewEvents = pgTable(
@@ -77,14 +86,37 @@ export const reviewEvents = pgTable(
       .references(() => users.id),
     questionId: integer("question_id")
       .notNull()
-      .references(() => questions.id, { onDelete: "cascade" }),
+      .references(() => questions.id, { onDelete: "restrict" }),
     status: statusEnum("status").notNull(),
+    kind: varchar("kind", { length: 16 })
+      .$type<"legacy" | "practice">()
+      .notNull()
+      .default("legacy"),
+    answer: text("answer"),
+    attemptId: uuid("attempt_id"),
+    roundId: uuid("round_id"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
     index("review_events_user_date_idx").on(table.userId, table.createdAt),
+    index("review_events_round_idx").on(
+      table.userId,
+      table.roundId,
+      table.questionId,
+      table.id,
+    ),
+    index("review_events_question_date_idx").on(
+      table.userId,
+      table.questionId,
+      table.createdAt,
+      table.id,
+    ),
+    uniqueIndex("review_events_user_attempt_idx").on(
+      table.userId,
+      table.attemptId,
+    ),
   ],
 );
 

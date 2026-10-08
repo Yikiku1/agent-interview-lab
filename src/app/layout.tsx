@@ -27,11 +27,25 @@ export default function RootLayout({
     >
       <body className="min-h-screen font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <a href="#main-content" className="skip-link">
+            跳到主要内容
+          </a>
           <SiteHeader />
-          <main className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+          <main id="main-content" tabIndex={-1} className="app-container">
             {children}
           </main>
-          <Toaster position="bottom-right" richColors closeButton />
+          <Toaster
+            position="top-right"
+            closeButton
+            toastOptions={{
+              style: {
+                background: "var(--surface)",
+                color: "var(--foreground)",
+                borderColor: "var(--border)",
+                fontFamily: "inherit",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>
