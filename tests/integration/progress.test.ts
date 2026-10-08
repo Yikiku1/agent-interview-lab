@@ -11,12 +11,14 @@ import {
 import { seedQuestionBank } from "../../src/db/seed-bank";
 import { retiredQuestionTexts } from "../../src/db/seed-data";
 import { startTestDatabase } from "../helpers/postgres";
+import { corePath } from "../../src/db/core-path";
 
 let database: Awaited<ReturnType<typeof startTestDatabase>>;
 let store: typeof import("../../src/db");
 let api: typeof import("../../src/app/api/progress/route");
 let attempts: typeof import("../../src/app/api/attempts/route");
 let queries: typeof import("../../src/lib/questions");
+let daily: typeof import("../../src/lib/daily-practice-query");
 
 before(async () => {
   database = await startTestDatabase();
@@ -25,6 +27,7 @@ before(async () => {
   api = await import("../../src/app/api/progress/route");
   attempts = await import("../../src/app/api/attempts/route");
   queries = await import("../../src/lib/questions");
+  daily = await import("../../src/lib/daily-practice-query");
 });
 
 after(async () => {
@@ -553,4 +556,174 @@ test("round summaries restore only that round and use the latest saved rating pe
     [],
   );
   assert.deepEqual(await queries.getRoundCompletions(round, []), []);
+});
+
+test("daily query isolates formal events/default user, deduplicates history, keeps unscheduled core new and never writes", async () => {
+  await seedQuestionBank(store.db);
+  const seeded = await store.db.select().from(questions);
+  const coreIds = corePath.map(
+    (entry) => seeded.find((row) => row.question === entry.question)!.id,
+  );
+  const due = await addQuestion("due mastered");
+  const weak = await addQuestion("weak formal");
+  const now = new Date("2026-10-08T02:00:00Z");
+  const yesterday = new Date("2026-10-07T02:00:00Z");
+  await mark(coreIds[0], "unknown");
+  await mark(coreIds[1], "fuzzy");
+  await mark(due.id, "mastered");
+  await mark(weak.id, "unknown");
+  await store.db
+    .update(userQuestionProgress)
+    .set({ nextReviewAt: yesterday })
+    .where(eq(userQuestionProgress.questionId, due.id));
+  await store.db.insert(reviewEvents).values([
+    {
+      userId: "default",
+      questionId: coreIds[0],
+      kind: "legacy",
+      status: "unknown",
+      createdAt: now,
+    },
+    {
+      userId: "default",
+      questionId: weak.id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: yesterday,
+    },
+    {
+      userId: "default",
+      questionId: weak.id,
+      kind: "practice",
+      status: "fuzzy",
+      createdAt: new Date("2026-10-06T00:00:00Z"),
+    },
+  ]);
+  await store.db.insert(users).values({ id: "other" });
+  await store.db
+    .insert(reviewEvents)
+    .values({
+      userId: "other",
+      questionId: coreIds[1],
+      kind: "practice",
+      status: "mastered",
+      createdAt: now,
+    });
+  const progressBefore = await store.db.select().from(userQuestionProgress);
+  const historyBefore = await store.db.select().from(reviewEvents);
+  const result = await daily.getDailyPractice(now);
+  assert.deepEqual(result.ids, [due.id, weak.id, ...coreIds.slice(0, 8)]);
+  assert.deepEqual(result.counts, { due: 1, weak: 1, core: 8 });
+  assert.deepEqual(result.coreProgress, {
+    completed: 0,
+    total: 30,
+    currentCategory: "LLM",
+  });
+  assert.equal(result.excludedToday, 0);
+  assert.deepEqual(await daily.getDailyPractice(now), result);
+  assert.deepEqual(
+    await store.db.select().from(userQuestionProgress),
+    progressBefore,
+  );
+  assert.deepEqual(await store.db.select().from(reviewEvents), historyBefore);
+});
+
+test("daily query excludes the entire Beijing day with exact boundaries even when another later event exists", async () => {
+  const entries = await Promise.all(
+    [0, 1, 2, 3, 4].map((i) => addQuestion(corePath[i].question)),
+  );
+  await store.db.update(questions).set({ category: "LLM" });
+  const now = new Date("2026-10-08T02:00:00Z");
+  for (const entry of entries) await mark(entry.id, "unknown");
+  await store.db.insert(reviewEvents).values([
+    {
+      userId: "default",
+      questionId: entries[0].id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: new Date("2026-10-07T15:59:59.999Z"),
+    },
+    {
+      userId: "default",
+      questionId: entries[1].id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: new Date("2026-10-07T16:00:00Z"),
+    },
+    {
+      userId: "default",
+      questionId: entries[2].id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: new Date("2026-10-08T15:59:59.999Z"),
+    },
+    {
+      userId: "default",
+      questionId: entries[3].id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: new Date("2026-10-08T16:00:00Z"),
+    },
+    // max(created_at) alone cannot detect a same-day completion in this case.
+    {
+      userId: "default",
+      questionId: entries[1].id,
+      kind: "practice",
+      status: "unknown",
+      createdAt: new Date("2026-10-08T16:00:00Z"),
+    },
+  ]);
+  const result = await daily.getDailyPractice(now);
+  assert.deepEqual(result.ids, [entries[0].id, entries[3].id, entries[4].id]);
+  assert.equal(result.excludedToday, 2);
+  await store.db
+    .update(questions)
+    .set({ active: false })
+    .where(eq(questions.id, entries[4].id));
+  assert.equal((await daily.getDailyPractice(now)).coreProgress.total, 4);
+  const nextDay = await daily.getDailyPractice(
+    new Date("2026-10-08T16:00:00Z"),
+  );
+  assert.equal(nextDay.excludedToday, 2);
+  assert.deepEqual(nextDay.ids, [entries[0].id, entries[2].id]);
+});
+
+test("daily path resolves database ids by unique text, skips a retired topic, and returns honest empty state", async () => {
+  // Deliberately shift ids away from manifest positions.
+  await addQuestion("unrelated");
+  await seedQuestionBank(store.db);
+  await store.db
+    .update(questions)
+    .set({ active: false })
+    .where(eq(questions.category, "LLM"));
+  const result = await daily.getDailyPractice(new Date("2026-10-08T02:00:00Z"));
+  assert.deepEqual(result.coreProgress, {
+    completed: 0,
+    total: 25,
+    currentCategory: "Python",
+  });
+  const first = (
+    await store.db
+      .select()
+      .from(questions)
+      .where(eq(questions.id, result.ids[0]))
+  )[0];
+  assert.equal(first.question, corePath[5].question);
+  const seeded = await store.db.select().from(questions);
+  await store.db.insert(reviewEvents).values(
+    corePath.map((entry) => ({
+      userId: "default",
+      questionId: seeded.find((row) => row.question === entry.question)!.id,
+      kind: "practice" as const,
+      status: "mastered" as const,
+      createdAt: new Date("2026-10-07T00:00:00Z"),
+    })),
+  );
+  const done = await daily.getDailyPractice(new Date("2026-10-08T02:00:00Z"));
+  assert.deepEqual(done.ids, []);
+  assert.deepEqual(done.coreProgress, {
+    completed: 25,
+    total: 25,
+    currentCategory: null,
+  });
 });

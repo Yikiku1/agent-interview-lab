@@ -611,6 +611,36 @@
     border-top: 1px solid var(--border);
     padding-top: var(--space-6);
   }
+  .core-learning-answer {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .learning-sections {
+    border-top: 1px solid var(--border);
+  }
+  .learning-details {
+    min-width: 0;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--type-body);
+  }
+  .learning-details > summary {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-2);
+    font-size: var(--type-caption);
+    font-weight: 500;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+  .learning-details > summary:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .learning-detail-content {
+    min-width: 0;
+    padding: var(--space-3) var(--space-2) var(--space-5);
+  }
   .practice-actions {
     display: flex;
     flex-direction: column;

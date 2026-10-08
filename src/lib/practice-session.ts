@@ -3,7 +3,16 @@ import type { QuestionStatus } from "@/db/schema";
 const MAX_QUEUE_SIZE = 1000;
 const MAX_QUESTION_ID = 2147483647;
 
-export type PracticeMode = "sequential" | "random" | "weak" | "due";
+export type PracticeMode = "sequential" | "random" | "weak" | "due" | "daily";
+
+export function parsePracticeMode(value: string | undefined): PracticeMode {
+  return value === "random" ||
+    value === "weak" ||
+    value === "due" ||
+    value === "daily"
+    ? value
+    : "sequential";
+}
 export type RoundCompletion = {
   questionId: number;
   status: QuestionStatus;

@@ -9,6 +9,30 @@ const actions = [
   { status: "mastered", label: "掌握", icon: Check },
 ] as const;
 
+export function MasteryGuide() {
+  return (
+    <details className="learning-details mastery-guide">
+      <summary>自评标准：按独立回答的程度判断</summary>
+      <dl className="learning-detail-content flex flex-col gap-3 text-xs leading-6">
+        <div>
+          <dt className="font-medium text-foreground">不会</dt>
+          <dd>无法独立形成关键思路，或主要结论明显错误。</dd>
+        </div>
+        <div>
+          <dt className="font-medium text-foreground">模糊</dt>
+          <dd>
+            能回答部分内容，但遗漏关键要点、需要提示，或无法解释例子与边界。
+          </dd>
+        </div>
+        <div>
+          <dt className="font-medium text-foreground">掌握</dt>
+          <dd>不看答案能覆盖关键要点，用合理例子解释，并回答基础追问。</dd>
+        </div>
+      </dl>
+    </details>
+  );
+}
+
 export function MasteryControl({
   status,
   disabled,

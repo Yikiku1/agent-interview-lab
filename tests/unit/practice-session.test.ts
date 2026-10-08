@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   orderSavedQueue,
+  parsePracticeMode,
   parseQueueIds,
   resumeSessionUrl,
   sessionIndex,
@@ -13,6 +14,26 @@ import {
 } from "../../src/lib/practice-session";
 
 const row = (id: number) => ({ question: { id } });
+
+test("daily mode keeps saved queue, round and position across resumes and accepts old modes", () => {
+  assert.equal(parsePracticeMode("daily"), "daily");
+  for (const mode of ["sequential", "random", "weak", "due"] as const)
+    assert.equal(parsePracticeMode(mode), mode);
+  assert.equal(parsePracticeMode("invalid"), "sequential");
+  const round = "11111111-1111-4111-8111-111111111111";
+  const canonical = roundLocation(
+    "/practice/session?mode=daily",
+    round,
+    [41, 8, 15],
+    8,
+  );
+  const saved = snapshotSession(canonical, [41, 8, 15], 8);
+  assert.equal(resumeSessionUrl(JSON.stringify(saved)), canonical);
+  assert.equal(
+    new URL(canonical, "http://localhost").searchParams.get("mode"),
+    "daily",
+  );
+});
 
 test("resume keeps the current question after earlier questions change mastery", () => {
   const saved = snapshotSession(

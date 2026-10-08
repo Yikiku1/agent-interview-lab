@@ -160,7 +160,7 @@ function dueOrder() {
 
 export async function getPracticeSelection(
   filters: Filters,
-  mode: PracticeMode,
+  mode: Exclude<PracticeMode, "daily">,
   size: 10 | 20,
   seed: string,
   includeFuzzy: boolean,

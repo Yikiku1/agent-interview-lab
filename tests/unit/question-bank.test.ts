@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getSeedQuestions, retiredQuestionTexts } from "../../src/db/seed-data";
 import { basicQuestions } from "../../src/db/basic-questions";
-import { coreAnswers } from "../../src/db/core-answers";
+import {
+  coreAnswers,
+  coreLearningEntries,
+  getCoreLearningEntry,
+} from "../../src/db/core-answers";
+import { coreCategoryOrder, corePath } from "../../src/db/core-path";
+import { learningAnswer } from "../../src/db/learning-content";
 import { validateQuestionBank } from "../../src/db/seed-bank";
 
 test("570 questions include 70 distinct basics and 30 refined existing questions", () => {
@@ -51,4 +57,50 @@ test("bank validation rejects duplicates before any database write", () => {
   const rows = getSeedQuestions();
   rows[1] = rows[0];
   assert.throws(() => validateQuestionBank(rows), /unique/);
+});
+
+test("all 30 core entries map uniquely to the original bank, with actionable layers and ordered themes", () => {
+  const rows = getSeedQuestions();
+  assert.equal(coreLearningEntries.length, 30);
+  assert.equal(new Set(corePath.map((entry) => entry.key)).size, 30);
+  assert.deepEqual(
+    [...new Set(corePath.map((entry) => entry.category))],
+    [...coreCategoryOrder],
+  );
+  for (const entry of coreLearningEntries) {
+    const matches = rows.filter((row) => row.question === entry.question);
+    assert.equal(matches.length, 1, entry.question);
+    assert.equal(matches[0].category, entry.category);
+    assert.ok(matches[0].tags.includes("核心精修"));
+    assert.equal(matches[0].answer, learningAnswer(entry));
+    assert.ok(entry.keyPoints.length >= 3 && entry.keyPoints.length <= 5);
+    assert.ok(entry.pitfalls.length >= 1 && entry.pitfalls.length <= 2);
+    assert.equal(new Set(entry.keyPoints).size, entry.keyPoints.length);
+    for (const text of [
+      ...entry.keyPoints,
+      ...entry.pitfalls,
+      entry.projectPrompt,
+    ])
+      assert.ok(text.trim().length >= 10, `${entry.question}: ${text}`);
+    assert.equal(entry.followUps.length, 2);
+    for (const [label, url] of entry.sources) {
+      assert.ok(label);
+      assert.equal(new URL(url).protocol, "https:");
+    }
+    for (const text of [
+      entry.oral,
+      entry.explanation,
+      entry.example,
+      entry.projectPrompt,
+      ...entry.keyPoints,
+      ...entry.pitfalls,
+      ...entry.followUps,
+    ])
+      assert.ok(matches[0].answer.includes(text));
+    assert.equal(getCoreLearningEntry(entry.question, entry.category), entry);
+    assert.equal(
+      getCoreLearningEntry(entry.question, "invalid category"),
+      undefined,
+    );
+  }
 });

@@ -5,46 +5,85 @@ import { StatsStrip } from "@/components/ui/stats-strip";
 import { ContinueButton } from "@/components/practice/continue-button";
 import { CategoryProgress } from "@/components/question/category-progress";
 import { getDashboard } from "@/lib/questions";
+import { getDailyPractice } from "@/lib/daily-practice-query";
+import { getRequestTime } from "@/lib/request-time";
+import { Progress } from "@/components/ui/progress";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const stats = await getDashboard();
+  const [stats, daily] = await Promise.all([
+    getDashboard(),
+    getDailyPractice(new Date(getRequestTime())),
+  ]);
+  const dailyHref = `/practice/session?mode=daily&queue=${daily.ids.join(",")}`;
   return (
     <div className="page-stack">
       <section className="panel home-focus" aria-labelledby="home-title">
         <div>
           <h1 id="home-title" className="page-title">
-            开始今天的练习
+            今日推荐练习
           </h1>
           <p className="page-description">
-            专注 Agent 与 LLM
-            应用开发面试。先用自己的话回答，再对照答案，逐步补齐薄弱环节。
+            {daily.ids.length
+              ? `${daily.ids.length} 题 · 到期复习 ${daily.counts.due} · 薄弱巩固 ${daily.counts.weak} · 核心新题 ${daily.counts.core}`
+              : "暂无推荐题目"}
+          </p>
+          <p className="mt-2 text-xs leading-6 text-muted-foreground">
+            {daily.ids.length
+              ? `本轮主题：${daily.themes.join("、")}。先独立回答，再对照要点。`
+              : "当前没有符合条件的到期、薄弱或核心新题，可以手动选择题目练习。"}
+            {daily.excludedToday > 0 ? "今天已完成的题目已排除。" : ""}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/practice">
-                <BookOpen data-icon="inline-start" />
-                开始练习
+            {daily.ids.length ? (
+              <Button asChild>
+                <Link href={dailyHref} prefetch={false}>
+                  <BookOpen data-icon="inline-start" />
+                  开始推荐练习
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link href="/practice">手动选择练习</Link>
+              </Button>
+            )}
+            <ContinueButton />
+            <Button variant="ghost" asChild>
+              <Link href={daily.ids.length ? "/practice" : "/questions"}>
+                {daily.ids.length ? "手动设置" : "浏览题库"}
               </Link>
             </Button>
-            <ContinueButton />
           </div>
         </div>
         <div className="home-review">
           <div>
-            <h2 className="text-sm font-medium">到期复习</h2>
+            <h2 className="text-sm font-medium">核心训练路径</h2>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">
-              {stats.dueReviews ? (
-                <>
-                  <strong className="text-lg font-semibold tabular-nums text-foreground">
-                    {stats.dueReviews}
-                  </strong>{" "}
-                  道题等待复习
-                </>
-              ) : (
-                "今天的复习已跟上进度"
-              )}
+              核心题已练 {daily.coreProgress.completed} /{" "}
+              {daily.coreProgress.total}
+            </p>
+            <div className="mt-3">
+              <Progress
+                value={
+                  daily.coreProgress.total
+                    ? (daily.coreProgress.completed /
+                        daily.coreProgress.total) *
+                      100
+                    : 0
+                }
+                label="核心题练习覆盖率"
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {daily.coreProgress.currentCategory
+                ? `当前主题：${daily.coreProgress.currentCategory}`
+                : daily.coreProgress.total
+                  ? "启用核心题均已练过"
+                  : "暂无启用核心题"}
+            </p>
+            <p className="mt-2 text-xs leading-6 text-muted-foreground">
+              LLM → Python → 后端 → 数据库 → RAG → LLM 应用工程 → Agent
             </p>
           </div>
           <Link

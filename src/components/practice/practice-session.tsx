@@ -18,7 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { MarkdownAnswer } from "@/components/question/markdown-answer";
-import { MasteryControl } from "@/components/question/mastery-control";
+import {
+  MasteryControl,
+  MasteryGuide,
+} from "@/components/question/mastery-control";
+import { CoreLearningAnswer } from "@/components/question/core-learning-answer";
+import type { CoreLearningEntry } from "@/db/learning-content";
 import { StatusBadge } from "@/components/question/status-badge";
 import { saveProgress } from "@/components/question/status-actions";
 import type { Question, QuestionStatus } from "@/db/schema";
@@ -36,6 +41,7 @@ import { RoundSummary } from "@/components/practice/round-summary";
 
 type Row = { question: Question; status: QuestionStatus | null };
 const modeLabels = {
+  daily: "今日推荐练习",
   due: "到期复习",
   weak: "薄弱题练习",
   random: "随机练习",
@@ -50,6 +56,8 @@ export function PracticeSession({
   initialCompletions,
   initialFinished,
   referenceTime,
+  learningEntries,
+  skippedCount,
 }: {
   rows: Row[];
   initialIndex: number;
@@ -58,6 +66,8 @@ export function PracticeSession({
   initialCompletions: RoundCompletion[];
   initialFinished: boolean;
   referenceTime: number;
+  learningEntries: Record<number, CoreLearningEntry>;
+  skippedCount: number;
 }) {
   const [index, setIndex] = useState(initialIndex);
   const [revealed, setRevealed] = useState(false);
@@ -217,7 +227,7 @@ export function PracticeSession({
         event.preventDefault();
         go(1);
       }
-      if (event.code === "Space" && !["BUTTON", "A"].includes(target.tagName)) {
+      if (event.code === "Space" && !target.closest("button, a, summary")) {
         event.preventDefault();
         setRevealed((value) => !value);
       }
@@ -304,6 +314,14 @@ export function PracticeSession({
         value={(Object.keys(completions).length / rows.length) * 100}
         label="本轮完成进度"
       />
+      {skippedCount > 0 ? (
+        <Alert>
+          <span>
+            本轮有 {skippedCount} 道题已停用，已跳过；实际练习 {rows.length}{" "}
+            题。
+          </span>
+        </Alert>
+      ) : null}
       {lastSaved ? (
         <Alert tone="success">
           <Check />
@@ -415,7 +433,14 @@ export function PracticeSession({
                 <h2 id="reference-title" className="section-title">
                   参考答案
                 </h2>
-                <MarkdownAnswer>{current.question.answer}</MarkdownAnswer>
+                {learningEntries[current.question.id] ? (
+                  <CoreLearningAnswer
+                    key={current.question.id}
+                    entry={learningEntries[current.question.id]}
+                  />
+                ) : (
+                  <MarkdownAnswer>{current.question.answer}</MarkdownAnswer>
+                )}
               </>
             ) : null}
           </section>
@@ -475,6 +500,10 @@ export function PracticeSession({
               </Button>
             )}
           </div>
+          <p className="text-xs leading-6 text-muted-foreground">
+            先对照回答要点，再判断能否独立解释例子与边界。仅选择自评不计次数，完成本题后才记录练习。
+          </p>
+          <MasteryGuide key={current.question.id} />
           <Alert tone={feedback && !feedback.success ? "danger" : "neutral"}>
             {saving ? (
               <LoaderCircle className="animate-spin" />
