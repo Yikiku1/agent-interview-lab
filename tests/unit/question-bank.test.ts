@@ -10,15 +10,26 @@ import {
 import { coreCategoryOrder, corePath } from "../../src/db/core-path";
 import { learningAnswer } from "../../src/db/learning-content";
 import { validateQuestionBank } from "../../src/db/seed-bank";
+import { resumeQuestions } from "../../src/db/resume-questions";
 
-test("570 questions include 70 distinct basics and 30 refined existing questions", () => {
+test("670 questions preserve 570 originals and include 100 resume questions", () => {
   const rows = getSeedQuestions();
   validateQuestionBank(rows);
-  assert.equal(rows.length, 570);
-  assert.equal(new Set(rows.map((row) => row.question)).size, 570);
+  assert.equal(rows.length, 670);
+  assert.equal(new Set(rows.map((row) => row.question)).size, 670);
+  assert.equal(resumeQuestions.length, 100);
   assert.equal(basicQuestions.length, 70);
   assert.equal(Object.keys(coreAnswers).length, 30);
-  assert.equal(rows.filter((row) => row.difficulty === "easy").length, 84);
+  assert.equal(
+    rows.filter((row) => !row.tags.includes("简历专项")).length,
+    570,
+  );
+  assert.equal(
+    rows.filter(
+      (row) => row.difficulty === "easy" && !row.tags.includes("简历专项"),
+    ).length,
+    84,
+  );
   assert.equal(
     rows.some((row) => retiredQuestionTexts.includes(row.question)),
     false,

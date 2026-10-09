@@ -10,6 +10,7 @@ import { foundationTopics } from "./expansion-foundations";
 import { appliedTopics } from "./expansion-applied";
 import { basicQuestions } from "./basic-questions";
 import { coreAnswers } from "./core-answers";
+import { resumeQuestions } from "./resume-questions";
 
 type Difficulty = Question["difficulty"];
 type Entry = [
@@ -1235,6 +1236,7 @@ export function getSeedQuestions(): SeedQuestion[] {
       ...appliedTopics,
     ]),
     ...basicQuestions,
+    ...resumeQuestions,
   ];
   for (const question of Object.keys(coreAnswers)) {
     if (!rows.some((row) => row.question === question)) {

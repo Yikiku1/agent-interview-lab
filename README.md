@@ -2,6 +2,8 @@
 
 面向 Agent 开发与 LLM 应用开发岗位的个人刷题工具。支持分轮练习、回答草稿、自评与历史回看、到期复习。
 
+开发与接手先阅读 [项目状态与开发交接](PROJECT_CONTEXT.md)，其中记录当前进度、运行状态、模块入口、开发习惯和验证证据。
+
 ## 本地启动
 
 需要 Node.js 20.9+、pnpm 和 PostgreSQL。下面使用 Docker 启动数据库；已有本地 PostgreSQL 时可直接配置连接。项目默认连接本机 5432 端口。
@@ -33,7 +35,8 @@ pnpm dev
 - 复习页默认展示到期题目，包含到期的“掌握”题；仅标记过状态、尚无复习时间的题目先完成一次练习。按待首次练习、到期时间排序；同一时间下“不会”优先。“全部薄弱题”仍可随时练习不会和模糊题，按不会优先、较久未复习优先排序。
 - 完成练习后安排下次复习：不会 1 天、模糊 3 天，二者重置连续掌握阶段；连续掌握按 1 / 3 / 7 / 14 天递增，之后保持 14 天。按完成时间计算间隔，页面用北京时间显示。
 - 续练将本轮 ID、固定队列、当前题目 ID 和总结状态保存在 URL；刷新和首页“继续刷题”保持相同位置，状态变化后不会跳题，随机顺序也保持一致。已停用题目会跳过，新开一轮时重新筛选。已完成记录可从数据库恢复，未完成草稿依赖浏览器存储。
-- 570 道种子题目：Agent 130、LLM 应用工程 118、RAG 100、LLM 72、Python 60、后端 52、数据库 38。新增 70 道基础题，每个分类 10 道；题库现有 84 道简单题。选择“简单”即可进行基础练习。
+- 670 道种子题目：Agent 154、LLM 应用工程 144、RAG 120、LLM 82、Python 68、后端 60、数据库 42。原有 570 题中包含 70 道基础题，每个分类 10 道；原题保持 84 道简单题。
+- 新增 100 道简历专项题，覆盖 VendorGuard、发票识别实习、项目讲述与关联基础。每题包含简历依据、短答思路、三个深入要点、验证场景、三个追问、误区、自评与资料；区分简历实战、基础关联和扩展设计。题库搜索“简历”查全部，搜索“简历 P0”查优先准备题；[整理与导入说明](docs/RESUME_QUESTION_BANK.md)。
 - 30 道核心题按 LLM → Python → 后端 → 数据库 → RAG → LLM 应用工程 → Agent 排列。每题提供 3–5 条回答要点、1–2 条具体误区及真实项目举例提示，并保留短答、解释、示例、追问和资料；练习中先展示短答与要点，其余内容按需展开，切题后重新隐藏。
 - 自评区提供不会、模糊、掌握的独立回答标准；仅选择自评不计次数，口头或空白文字作答仍可完成。
 - Python、后端和数据库题目围绕 AI 应用所需的服务端能力；题库不含前端分类。LLM 分类聚焦 token、上下文、模型选型、输出控制与评估，不考注意力公式、MoE、LoRA 训练等算法细节。
@@ -46,7 +49,7 @@ pnpm dev
 - `user_question_progress`：每个用户每道题的最新状态、复习次数、最近复习时间、连续掌握阶段 `review_stage` 与下次复习时间 `next_review_at`。
 - `review_events`：完成的练习，保存当次自评、文字回答、时间、提交 ID 和可选本轮 ID `round_id`；提交 ID 按用户唯一，保证重试不会多计。`kind=legacy` 表示旧版状态记录，`kind=practice` 表示新的完整练习。本轮总结从这些事件恢复，打开练习页本身不写入数据库。
 
-Schema 位于 `src/db/schema.ts`。原有题目的题干和核心结论位于 `src/db/seed-data.ts`，逐题说明位于 `src/db/seed-notes.ts`，主题原理位于 `src/db/seed-context.ts`；岗位场景题位于 `src/db/expansion-*.ts`，落地案例位于 `src/db/answer-examples.ts`。新增基础题位于 `src/db/basic-questions.ts`，核心题精修位于 `src/db/core-answers.ts`。
+Schema 位于 `src/db/schema.ts`。原有题目的题干和核心结论位于 `src/db/seed-data.ts`，逐题说明位于 `src/db/seed-notes.ts`，主题原理位于 `src/db/seed-context.ts`；岗位场景题位于 `src/db/expansion-*.ts`，落地案例位于 `src/db/answer-examples.ts`。基础题位于 `src/db/basic-questions.ts`，核心题精修位于 `src/db/core-answers.ts`。简历题由 `src/db/resume-questions.ts` 汇总，`resume-content.ts` 统一来源和答案结构，具体内容位于 `resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts`。
 
 `pnpm db:seed` 可重复执行，按题目文本更新已有条目并保留题目 ID 和进度；旧版前端与被替换的算法题目改为停用，保留其历史事件。外键拒绝删除仍有练习记录的题目。导入时会校验总数、分类数量、题干唯一性和答案长度。
 

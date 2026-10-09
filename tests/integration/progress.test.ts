@@ -251,12 +251,12 @@ test("repeated seeding preserves live progress and retires old content without d
     .where(eq(questions.id, retired.id));
   assert.equal(retiredRow.active, false);
   assert.equal(await queries.getQuestion(retired.id), undefined);
-  assert.equal((await queries.listQuestions()).total, 570);
+  assert.equal((await queries.listQuestions()).total, 670);
   assert.equal((await queries.getDashboard()).totalReviews, 1);
   const live = (await queries.listQuestions()).rows[0].question;
   await complete(live.id, "fuzzy");
   await seedQuestionBank(store.db);
-  assert.equal((await queries.listQuestions()).total, 570);
+  assert.equal((await queries.listQuestions()).total, 670);
   assert.equal((await queries.getDashboard()).totalReviews, 2);
   const [progress] = await store.db
     .select()

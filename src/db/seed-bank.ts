@@ -9,13 +9,13 @@ import {
 } from "./seed-data";
 
 export const expectedQuestionCounts: Record<string, number> = {
-  Agent: 130,
-  LLM: 72,
-  RAG: 100,
-  "LLM 应用工程": 118,
-  Python: 60,
-  后端: 52,
-  数据库: 38,
+  Agent: 154,
+  LLM: 82,
+  RAG: 120,
+  "LLM 应用工程": 144,
+  Python: 68,
+  后端: 60,
+  数据库: 42,
 };
 
 export function validateQuestionBank(rows: SeedQuestion[]) {
