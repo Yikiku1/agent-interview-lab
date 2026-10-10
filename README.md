@@ -38,6 +38,7 @@ pnpm dev
 - 670 道种子题目：Agent 154、LLM 应用工程 144、RAG 120、LLM 82、Python 68、后端 60、数据库 42。原有 570 题中包含 70 道基础题，每个分类 10 道；原题保持 84 道简单题。
 - 新增 100 道简历专项题，覆盖 VendorGuard、发票识别实习、项目讲述与关联基础。每题包含简历依据、短答思路、三个深入要点、验证场景、三个追问、误区、自评与资料；区分简历实战、基础关联和扩展设计。题库搜索“简历”查全部，搜索“简历 P0”查优先准备题；[整理与导入说明](docs/RESUME_QUESTION_BANK.md)。
 - 30 道核心题按 LLM → Python → 后端 → 数据库 → RAG → LLM 应用工程 → Agent 排列。每题提供 3–5 条回答要点、1–2 条具体误区及真实项目举例提示，并保留短答、解释、示例、追问和资料；练习中先展示短答与要点，其余内容按需展开，切题后重新隐藏。
+- 2026-10-10 全部 670 道答案已修订并导入：普通短答 120–180、简历短答 240–270 个有效字符范围检查通过；补充每题机制和示例，共享背景标为补充。篇幅按 30–60 / 60–90 秒估算，未做真人计时；[修订交付与验证](docs/ANSWER_QUALITY_REVISION.md)。
 - 自评区提供不会、模糊、掌握的独立回答标准；仅选择自评不计次数，口头或空白文字作答仍可完成。
 - Python、后端和数据库题目围绕 AI 应用所需的服务端能力；题库不含前端分类。LLM 分类聚焦 token、上下文、模型选型、输出控制与评估，不考注意力公式、MoE、LoRA 训练等算法细节。
 - 系统主题默认、手动明暗主题切换；移动端单列布局。
@@ -49,15 +50,19 @@ pnpm dev
 - `user_question_progress`：每个用户每道题的最新状态、复习次数、最近复习时间、连续掌握阶段 `review_stage` 与下次复习时间 `next_review_at`。
 - `review_events`：完成的练习，保存当次自评、文字回答、时间、提交 ID 和可选本轮 ID `round_id`；提交 ID 按用户唯一，保证重试不会多计。`kind=legacy` 表示旧版状态记录，`kind=practice` 表示新的完整练习。本轮总结从这些事件恢复，打开练习页本身不写入数据库。
 
-Schema 位于 `src/db/schema.ts`。原有题目的题干和核心结论位于 `src/db/seed-data.ts`，逐题说明位于 `src/db/seed-notes.ts`，主题原理位于 `src/db/seed-context.ts`；岗位场景题位于 `src/db/expansion-*.ts`，落地案例位于 `src/db/answer-examples.ts`。基础题位于 `src/db/basic-questions.ts`，核心题精修位于 `src/db/core-answers.ts`。简历题由 `src/db/resume-questions.ts` 汇总，`resume-content.ts` 统一来源和答案结构，具体内容位于 `resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts`。
+Schema 位于 `src/db/schema.ts`。原有题目的题干和结论位于 `src/db/seed-data.ts`，逐题说明位于 `src/db/seed-notes.ts`，主题背景位于 `src/db/seed-context.ts`，逐题示例与部分独立短答位于 `src/db/original-examples.ts`；岗位场景题及各题讲解、示例位于 `src/db/expansion-*.ts`。基础题位于 `src/db/basic-questions.ts`，核心题精修位于 `src/db/core-answers.ts`。简历题由 `src/db/resume-questions.ts` 汇总，`resume-content.ts` 统一来源和答案结构，具体内容位于 `resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts`。
 
-`pnpm db:seed` 可重复执行，按题目文本更新已有条目并保留题目 ID 和进度；旧版前端与被替换的算法题目改为停用，保留其历史事件。外键拒绝删除仍有练习记录的题目。导入时会校验总数、分类数量、题干唯一性和答案长度。
+`pnpm db:seed` 可重复执行，按题目文本更新已有条目并保留题目 ID 和进度；旧版前端与被替换的算法题目改为停用，保留其历史事件。外键拒绝删除仍有练习记录的题目。导入时会校验总数、分类数量、题干唯一性、全文长度，以及 `src/db/answer-quality.ts` 定义的口头短答、有效讲解和示例要求。
 
-网页、建表和导入脚本统一使用 `src/db/config.ts` 加载 `.env*`；显式环境变量优先。已有数据库升级前备份，再运行 `pnpm db:push` 添加字段与索引；题库内容需要更新时运行 `pnpm db:seed`。旧事件自动归为 `legacy`，保留原有次数，不回填从未保存过的回答。旧进度的 `next_review_at` 为空，进入待首次练习列表，完成后生成新安排。
+网页、建表和导入脚本统一使用 `src/db/config.ts` 加载 `.env*`；显式环境变量优先。新库通过 `pnpm db:push` 建表。旧四表数据库的 W0 升级使用版本化增量迁移，先备份并在独立库恢复、核对后执行 `pnpm db:migrate:w0 --apply`；省略参数只显示说明，不连接数据库，详见 [W0 契约与迁移步骤](docs/JOB_SEEKER_W0_CONTRACT.md)。题库内容需要更新时运行 `pnpm db:seed`。旧事件自动归为 `legacy`，保留原有次数，不回填从未保存过的回答。旧进度的 `next_review_at` 为空，进入待首次练习列表，完成后生成新安排。
+
+W0 已在 Schema 中定义 `learning_targets`、`personal_answer_cards`、`practice_observations`、`answer_point_checks`、`practice_gaps` 和迁移版本表，并交付请求校验与独立库迁移回归。当前个人库仍为上述原四表；新页面和保存接口在 W1–W4 实施。[领域词汇](CONTEXT.md) 区分正式完成、个人卡、作答观察和正式覆盖。
 
 `PUT /api/progress` 只更新掌握状态；`POST /api/attempts` 在一个事务内记录回答、更新练习次数和复习安排，回答上限 10,000 字符，支持空白回答及可选的 `roundId`。不同提交并发完成同一题时，以进度行锁串行更新次数和复习阶段。同一提交 ID 携带不同内容或本轮 ID 时返回 409，防止覆盖已经完成的练习。
 
 ## 常用命令
+
+W0 迁移说明：`pnpm db:migrate:w0`。使用 `--apply` 前先完成契约文档中的恢复演练；当前个人库尚未执行此迁移。
 
 ```bash
 pnpm dev
@@ -73,5 +78,7 @@ pnpm db:seed
 `pnpm test` 验证题库、环境配置、续练、本轮总结、草稿隔离与恢复、复习间隔。`pnpm test:db` 自动启动独立的临时 PostgreSQL 16，通过真实 Schema 和 API 验证状态与练习的统计区分、并发重试及不同提交、事务回滚、历史分页、分轮记录、到期筛选、10 / 20 题选择、复习顺序、重复导入及历史保留；完成后停止进程并删除临时数据，不连接个人练习库，不依赖 Docker。测试运行需要 Node.js 20.9+，开发依赖包含测试用 PostgreSQL 二进制；Windows x64 构建脚本已在 `pnpm-workspace.yaml` 中配置。
 
 ## 后续方向
+
+2026-10-09 [答案质量检查](docs/ANSWER_QUALITY_AUDIT.md)发现短答篇幅不足、模板重复和例子偏题；2026-10-10 已完成 [670 题修订与导入](docs/ANSWER_QUALITY_REVISION.md)。后续按实际练习朗读调整，并补本人证据；全文 Markdown 长度和自动字符检查不能代替讲解质量或真实口头表达验收。
 
 V2 可在 `users` 与 `user_question_progress.user_id` 基础上接入登录与云端同步。后续可独立增加 AI 答案评价、更多训练路径与模拟面试；当前版本没有引入 AI 服务或复杂基础设施。本期学习效率优化的实现和验收记录见 [交付说明](docs/LEARNING_EFFICIENCY_DELIVERY.md)。

@@ -6,7 +6,9 @@ import { spawn } from "node:child_process";
 import EmbeddedPostgres from "embedded-postgres";
 import postgres from "postgres";
 
-export async function startTestDatabase() {
+export async function startTestDatabase(
+  options: { pushSchema?: boolean } = {},
+) {
   const folder = await mkdtemp(join(tmpdir(), "interview-postgres-"));
   const server = createServer();
   const port = await new Promise<number>((resolvePort, reject) => {
@@ -43,29 +45,30 @@ export async function startTestDatabase() {
       await admin.end();
     }
     const url = `postgres://interview:test-only@127.0.0.1:${port}/interview_test`;
-    await new Promise<void>((resolvePush, reject) => {
-      const child = spawn(
-        process.execPath,
-        [resolve("node_modules/drizzle-kit/bin.cjs"), "push", "--force"],
-        {
-          cwd: process.cwd(),
-          env: { ...process.env, DATABASE_URL: url },
-          windowsHide: true,
-          stdio: ["ignore", "pipe", "pipe"],
-        },
-      );
-      let output = "";
-      child.stdout.on("data", (chunk) => {
-        output += chunk;
+    if (options.pushSchema !== false)
+      await new Promise<void>((resolvePush, reject) => {
+        const child = spawn(
+          process.execPath,
+          [resolve("node_modules/drizzle-kit/bin.cjs"), "push", "--force"],
+          {
+            cwd: process.cwd(),
+            env: { ...process.env, DATABASE_URL: url },
+            windowsHide: true,
+            stdio: ["ignore", "pipe", "pipe"],
+          },
+        );
+        let output = "";
+        child.stdout.on("data", (chunk) => {
+          output += chunk;
+        });
+        child.stderr.on("data", (chunk) => {
+          output += chunk;
+        });
+        child.on("error", reject);
+        child.on("exit", (code) =>
+          code === 0 ? resolvePush() : reject(new Error(output)),
+        );
       });
-      child.stderr.on("data", (chunk) => {
-        output += chunk;
-      });
-      child.on("error", reject);
-      child.on("exit", (code) =>
-        code === 0 ? resolvePush() : reject(new Error(output)),
-      );
-    });
     return {
       url,
       stop: async () => {

@@ -2,6 +2,8 @@ import { eq, inArray, or } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 import { questions, users } from "./schema";
+import { resumeMetadata } from "../lib/learning-contract";
+import { validateAnswerContent } from "./answer-quality";
 import {
   getSeedQuestions,
   retiredQuestionTexts,
@@ -19,6 +21,14 @@ export const expectedQuestionCounts: Record<string, number> = {
 };
 
 export function validateQuestionBank(rows: SeedQuestion[]) {
+  if (
+    rows.some(
+      (row) => row.tags.includes("简历专项") && resumeMetadata(row) === null,
+    )
+  )
+    throw new Error(
+      "Resume metadata must contain exactly one consistent project, priority and kind",
+    );
   const total = Object.values(expectedQuestionCounts).reduce(
     (sum, count) => sum + count,
     0,
@@ -49,6 +59,12 @@ export function validateQuestionBank(rows: SeedQuestion[]) {
   ) {
     throw new Error("Found an unexpected category or an insufficient answer");
   }
+  for (const row of rows)
+    validateAnswerContent(
+      row.question,
+      row.answer,
+      row.tags.includes("简历专项"),
+    );
 }
 
 export async function seedQuestionBank(db: PostgresJsDatabase<typeof schema>) {

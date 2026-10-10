@@ -1,4 +1,9 @@
 import type { SeedQuestion } from "./seed-data";
+import type {
+  ProjectScope,
+  ResumeKind,
+  ResumePriority,
+} from "../lib/learning-contract";
 
 export const resumeSource = {
   title: "刘宇文-AI-Agent开发-秋招简历-2027届-Classic-JD定向.pdf",
@@ -101,9 +106,9 @@ export const resumeSource = {
 export type ResumeEntry = {
   question: string;
   source: keyof typeof resumeSource.anchors;
-  priority: "P0" | "P1" | "P2";
+  priority: ResumePriority;
   difficulty: SeedQuestion["difficulty"];
-  kind: "简历实战" | "基础关联" | "扩展设计";
+  kind: ResumeKind;
   oral: string;
   points: readonly [string, string, string];
   evidence: string;
@@ -113,7 +118,7 @@ export type ResumeEntry = {
 
 export type ResumeGroup = {
   category: SeedQuestion["category"];
-  scope: "VendorGuard" | "发票实习" | "综合" | "技术基础";
+  scope: ProjectScope;
   sources: readonly [label: string, url: string][];
   entries: readonly ResumeEntry[];
 };

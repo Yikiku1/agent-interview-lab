@@ -10,6 +10,7 @@ import { foundationTopics } from "./expansion-foundations";
 import { appliedTopics } from "./expansion-applied";
 import { basicQuestions } from "./basic-questions";
 import { coreAnswers } from "./core-answers";
+import { originalExamples, originalOralAnswers } from "./original-examples";
 import { resumeQuestions } from "./resume-questions";
 
 type Difficulty = Question["difficulty"];
@@ -1185,18 +1186,6 @@ const expandedAnswers: Record<string, string> = {
   ].join("\n"),
 };
 
-const roleApplications: Record<string, string> = {
-  Python:
-    "Agent/LLM 服务通常用 Python 编排异步模型调用、数据处理和外部工具。语言机制若导致共享状态、阻塞事件循环或资源未释放，可能表现为尾延迟升高、任务重复或连接耗尽；因此要同时检查正常结果、异常路径和并发负载下的行为。",
-  LLM: "在应用选型中，相同模型的效果也会受到提示、上下文长度与采样参数影响。真实任务评估要固定这些变量，同时观察正确率、格式稳定性、延迟和 token 成本；出现错误时先定位模型能力、输入证据和服务链路各自的责任。",
-  RAG: "实际问答链路包含文档解析、召回、重排、上下文拼接、生成与引用。正确证据没有进入候选时，调整生成提示无法补救；证据已进入却仍答错时，则要检查截断、证据冲突和模型忠实度，并覆盖权限、版本、数字与否定条件。",
-  Agent:
-    "真实 Agent 的模型输出只是行动建议，宿主在执行前独立校验参数和权限，执行后保存工具结果与副作用。失败恢复依赖可重试性、幂等性与人工接管条件；最终文字即使正确，环境终态或调用轨迹违规仍属于任务失败。",
-  后端: "一次 LLM 应用请求可能扩展为多次模型、检索和工具调用，子调用超时与重试会共同消耗总时限。总截止时间、幂等键、用户权限与追踪 ID 应贯穿链路；重复请求、下游 429 与部分成功必须有明确的接口语义。",
-  数据库:
-    "Agent/RAG 系统常用数据库保存任务状态、权限和文档版本的权威记录。长任务不适合持有跨网络调用的数据库事务；索引会提高特定查询速度但增加写入成本。并发写入、故障恢复和删除后的再次查询可暴露正常读写无法发现的问题。",
-};
-
 export function getSeedQuestions(): SeedQuestion[] {
   const originals = Object.entries(bank).flatMap(([category, entries]) => {
     const notes = answerNotes[category];
@@ -1214,12 +1203,31 @@ export function getSeedQuestions(): SeedQuestion[] {
         const context = answerContext[category]?.[subcategory];
         if (!context)
           throw new Error(`Missing answer context: ${category}/${subcategory}`);
+        const example = originalExamples[question];
+        if (
+          !example &&
+          !coreAnswers[question] &&
+          !retiredOriginalQuestions.has(question)
+        )
+          throw new Error(`Missing question-specific example: ${question}`);
         return {
           category,
           subcategory,
           difficulty,
           question,
-          answer: `${expandedAnswers[question] ?? `### 核心结论\n\n${answer}`}\n\n### 原理与实现\n\n${context}\n\n### 场景与边界\n\n${notes[index]}\n\n### 岗位场景中的验证\n\n${roleApplications[category]}`,
+          answer: [
+            "### 30–60 秒回答",
+            originalOralAnswers[question] ??
+              `${answer}${notes[index]}${example ?? ""}`,
+            "### 逐题讲解与场景",
+            notes[index],
+            ...(example ? ["### 最小示例与验证", example] : []),
+            ...(expandedAnswers[question]
+              ? ["### 补充示例", expandedAnswers[question]]
+              : []),
+            "### 主题背景（补充）",
+            context,
+          ].join("\n\n"),
           tags: [category, subcategory],
         };
       })

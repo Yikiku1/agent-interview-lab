@@ -7,11 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --test tests/unit/database-config.test.ts tests/unit/practice-session.test.ts tests/unit/practice-draft.test.ts tests/unit/review-schedule.test.ts tests/unit/question-bank.test.ts tests/unit/daily-practice.test.ts",
-    "test:db": "node --conditions=react-server --import tsx --test tests/integration/progress.test.ts",
+    "test": "node --import tsx --test tests/unit/*.test.ts",
+    "test:db": "node --conditions=react-server --import tsx --test tests/integration/*.test.ts",
     "format": "prettier --write .",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx src/db/seed.ts"
+    "db:seed": "tsx src/db/seed.ts",
+    "db:migrate:w0": "tsx src/db/migrate-learning-foundation-cli.ts"
   },
   "dependencies": {
     "@next/env": "16.3.6",
