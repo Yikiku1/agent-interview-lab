@@ -92,6 +92,9 @@ export default async function HomePage() {
             )}
             <ContinueButton />
             <Button variant="ghost" asChild>
+              <Link href="/stats">查看目标进度</Link>
+            </Button>
+            <Button variant="ghost" asChild>
               <Link href="/learning-target">
                 {target ? "调整训练目标" : "设置训练目标"}
               </Link>

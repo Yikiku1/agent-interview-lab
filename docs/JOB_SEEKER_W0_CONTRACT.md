@@ -113,7 +113,7 @@ erDiagram
 
 规范化时去掉文本首尾空白，按 position 和固定 kind 顺序排列数组，并将默认空值补齐；存入父记录 payload。事务内插入父记录与所有子记录，同 ID 相同 payload 重试返回原记录 200，不同 payload 返回 409，新建 201。解决卡点只修改 resolved_at，不改父 payload，因此原请求在解决卡点后重试也不重新打开卡点。父 payload 不用于自动判断能力。
 
-`GET /api/practice-gaps` 复用范围、kind、未解决状态筛选。`PATCH /api/practice-gaps/:id` 以明确的 resolved 布尔值解决 / 重开，重复操作保持首次状态变更时间；不能使用 toggle。所有请求只访问当前用户的数据。不存在返回 404，暂时失败返回 500 并保留草稿；这些新接口不修改现有 POST /api/attempts。2026-10-11 已在 [W3](JOB_SEEKER_W3_DELIVERY.md) 接入个人卡、观察与卡点接口，包括 PATCH；统计口径仍待 W4。
+`GET /api/practice-gaps` 复用范围、kind、未解决状态筛选。`PATCH /api/practice-gaps/:id` 以明确的 resolved 布尔值解决 / 重开，重复操作保持首次状态变更时间；不能使用 toggle。所有请求只访问当前用户的数据。不存在返回 404，暂时失败返回 500 并保留草稿；这些新接口不修改现有 POST /api/attempts。2026-10-11 已在 [W3](JOB_SEEKER_W3_DELIVERY.md) 接入个人卡、观察与卡点接口，包括 PATCH；下列统计口径已在 [W4](JOB_SEEKER_W4_DELIVERY.md) 接入。
 
 ## 5. 队列与统计口径
 
@@ -135,6 +135,8 @@ W1 统一扩展 roundSize、设置、首页链接与总结为 3/5/10/20。已有
 | 卡点补练   | 未解决记录按最早 created_at、id 排序，再按题目 ID 去重；固定队列仍用现有 session，不复制公共题                |
 
 范围统计只读，切换目标后分母自然改变，不删除范围外资料。覆盖查询使用 EXISTS / DISTINCT 防止卡片、要点和卡点联表膨胀正式事件数；统计不命名为“面试通过率”。
+
+2026-10-11 W4 实现：`/stats` 默认读取当前目标，无目标时读取全部启用题；自选条件及 `scope=custom` 仅覆盖查看范围，单独 `page` 保持目标。目标、范围、计数和每页 12 题未练列表共用只读 repeatable read 快照；正式事件使用 EXISTS，个人卡/卡点独立聚合，证据使用与 ECMAScript trim 一致的空白口径。通用核心仍统计全部启用题，30 核心路径不替代统计分母。
 
 ## 6. 迁移、备份与回退
 

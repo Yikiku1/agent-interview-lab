@@ -4,11 +4,28 @@ import { Button } from "@/components/ui/button";
 import { StatsStrip } from "@/components/ui/stats-strip";
 import { CategoryProgress } from "@/components/question/category-progress";
 import { getDashboard } from "@/lib/questions";
+import { getScopeProgress } from "@/lib/scope-progress";
+import { parseScopeProgressQuery } from "@/lib/scope-progress-contract";
+import { ScopeProgressPanel } from "@/components/practice/scope-progress-panel";
+import { InvalidFilters } from "@/components/question/invalid-filters";
 
 export const dynamic = "force-dynamic";
 
-export default async function StatsPage() {
-  const stats = await getDashboard();
+export default async function StatsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  let query;
+  try {
+    query = parseScopeProgressQuery(await searchParams);
+  } catch {
+    return <InvalidFilters href="/stats" />;
+  }
+  const [stats, progress] = await Promise.all([
+    getDashboard(),
+    getScopeProgress(query.filters, query.page),
+  ]);
   const weak = stats.fuzzy + stats.unknown;
   return (
     <div className="page-stack">
@@ -34,10 +51,11 @@ export default async function StatsPage() {
           </Link>
         </Button>
       </div>
+      <ScopeProgressPanel progress={progress} />
       <section aria-labelledby="stats-overview-title">
         <div className="section-heading">
           <h2 id="stats-overview-title" className="section-title">
-            总体进度
+            全题库 · 本人自评
           </h2>
         </div>
         <StatsStrip

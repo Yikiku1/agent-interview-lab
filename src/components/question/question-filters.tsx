@@ -6,10 +6,25 @@ import { categories, difficultyLabels } from "@/lib/utils";
 import { LearningScopeFields } from "./learning-scope-fields";
 import type { Filters } from "@/lib/question-filters";
 
-export function QuestionFilters({ filters }: { filters: Filters }) {
+export function QuestionFilters({
+  filters,
+  action = "/questions",
+  hiddenFields = {},
+  resetHref = "/questions",
+  resetLabel = "重置",
+}: {
+  filters: Filters;
+  action?: string;
+  hiddenFields?: Record<string, string>;
+  resetHref?: string;
+  resetLabel?: string;
+}) {
   const active = Object.values(filters).some(Boolean);
   return (
-    <form action="/questions" role="search" className="panel filter-bar">
+    <form action={action} role="search" className="panel filter-bar">
+      {Object.entries(hiddenFields).map(([name, value]) => (
+        <input key={name} name={name} value={value} type="hidden" />
+      ))}
       <div className="col-span-full">
         <LearningScopeFields initial={filters} prefix="filter" />
       </div>
@@ -79,7 +94,7 @@ export function QuestionFilters({ filters }: { filters: Filters }) {
         <Button type="submit">筛选</Button>
         {active ? (
           <Button variant="ghost" asChild>
-            <Link href="/questions">重置</Link>
+            <Link href={resetHref}>{resetLabel}</Link>
           </Button>
         ) : null}
       </div>
