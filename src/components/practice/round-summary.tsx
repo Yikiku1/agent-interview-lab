@@ -7,17 +7,22 @@ import { StatsStrip } from "@/components/ui/stats-strip";
 import { StatusBadge } from "@/components/question/status-badge";
 import { DueLabel } from "@/components/question/due-label";
 import { summarizeRound, type RoundCompletion } from "@/lib/practice-session";
+import { ObservationEditor } from "@/components/practice/observation-editor";
 
 export function RoundSummary({
   questions,
   completions,
   onResume,
   referenceTime,
+  roundId,
+  points,
 }: {
   questions: { id: number; question: string }[];
   completions: Record<number, RoundCompletion>;
   onResume: (questionId: number) => void;
   referenceTime: number;
+  roundId: string;
+  points: Record<number, readonly string[]>;
 }) {
   const summary = summarizeRound(
     questions.map((row) => row.id),
@@ -95,6 +100,9 @@ export function RoundSummary({
           <Button variant="ghost" asChild>
             <Link href="/review">查看复习安排</Link>
           </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/practice-gaps">查看卡点与补练</Link>
+          </Button>
         </div>
         <p className="text-xs leading-6 text-muted-foreground">
           {summary.completed
@@ -129,7 +137,11 @@ export function RoundSummary({
                 </span>
                 <div className="min-w-0">
                   <Link
-                    href={`/questions/${question.id}#history`}
+                    href={
+                      completed?.eventId
+                        ? `/questions/${question.id}/history/${completed.eventId}`
+                        : `/questions/${question.id}#history`
+                    }
                     prefetch={false}
                     className="text-sm font-medium leading-7 hover:text-accent"
                   >
@@ -143,6 +155,28 @@ export function RoundSummary({
                       />
                     </div>
                   ) : null}
+                  <div className="mt-3 flex flex-col gap-3">
+                    <Link
+                      className="subtle-link text-sm"
+                      href={`/questions/${question.id}/answer-card${completed?.eventId ? `?fromEvent=${completed.eventId}` : ""}`}
+                    >
+                      查看 / 编辑我的回答卡
+                    </Link>
+                    <details>
+                      <summary className="cursor-pointer min-h-11 text-sm leading-7">
+                        记录 / 查看本轮自查草稿
+                      </summary>
+                      <div className="py-4">
+                        <ObservationEditor
+                          questionId={question.id}
+                          context={roundId}
+                          practiceRoundId={roundId}
+                          points={points[question.id]}
+                          reviewEventId={completed?.eventId}
+                        />
+                      </div>
+                    </details>
+                  </div>
                 </div>
                 <div className="pt-0.5">
                   {completed ? (

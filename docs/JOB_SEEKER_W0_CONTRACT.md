@@ -2,7 +2,9 @@
 
 更新日期：2026-10-09（北京时间）。对应 [开发计划](JOB_SEEKER_DEVELOPMENT_PLAN.md) 的 W0；领域词汇见 [CONTEXT.md](../CONTEXT.md)。
 
-W0 已实现请求校验、范围元数据规则、首期 Schema、增量迁移和独立 PostgreSQL 回归。首页入口、目标保存接口、短轮、个人卡和观察保存接口仍由 W1–W4 实施。现有个人库保持原四表，应用继续使用原有流程。
+W0 已实现请求校验、范围元数据规则、首期 Schema、增量迁移和独立 PostgreSQL 回归。W0 交付时个人库保持原四表，页面与接口由后续批次接入。
+
+2026-10-10（北京时间）后续状态：W0 与答案修订已在 `3756f01` 提交并推送。W1 已按本契约完成独立恢复、升级演练和个人库迁移，接入首页入口、共享范围、目标保存与 3/5 题；个人卡和观察仍待后续实施。详见 [W1 交付](JOB_SEEKER_W1_DELIVERY.md)，下文保留 W0 契约与原验证范围。
 
 ## 1. 已确定的首期选择
 
@@ -29,7 +31,7 @@ W0 已实现请求校验、范围元数据规则、首期 Schema、增量迁移�
 - `subcategory` 必须为 `简历专项 · ${project}`。
 - 题干中的装饰文字不参与范围识别。导入前校验元数据；错误元数据在写数据库前报错。
 
-`src/lib/learning-contract.ts` 提供常量、`resumeMetadata`、`parseLearningScope`、`scopeForTarget`、`scopeProjects` 与纯函数 `matchesLearningScope`。这些是 W1 的实现入口，当前页面尚未调用新范围解析。
+`src/lib/learning-contract.ts` 提供常量、`resumeMetadata`、`parseLearningScope`、`scopeForTarget`、`scopeProjects` 与纯函数 `matchesLearningScope`。W1 已接入新范围解析；SQL 共用条件位于 `questions.ts`，请求组合解析位于 `question-filters.ts`。
 
 | URL 条件         | 合法值与语义                                                              |
 | ---------------- | ------------------------------------------------------------------------- |
@@ -111,11 +113,11 @@ erDiagram
 
 规范化时去掉文本首尾空白，按 position 和固定 kind 顺序排列数组，并将默认空值补齐；存入父记录 payload。事务内插入父记录与所有子记录，同 ID 相同 payload 重试返回原记录 200，不同 payload 返回 409，新建 201。解决卡点只修改 resolved_at，不改父 payload，因此原请求在解决卡点后重试也不重新打开卡点。父 payload 不用于自动判断能力。
 
-`GET /api/practice-gaps` 复用范围、kind、未解决状态筛选。后续 `PATCH /api/practice-gaps/:id` 以明确的 resolved 布尔值解决 / 重开，重复操作保持首次状态变更时间；不能使用 toggle。所有请求只访问当前用户的数据。不存在返回 404，暂时失败返回 500 并保留草稿；这些新接口不修改现有 POST /api/attempts。
+`GET /api/practice-gaps` 复用范围、kind、未解决状态筛选。`PATCH /api/practice-gaps/:id` 以明确的 resolved 布尔值解决 / 重开，重复操作保持首次状态变更时间；不能使用 toggle。所有请求只访问当前用户的数据。不存在返回 404，暂时失败返回 500 并保留草稿；这些新接口不修改现有 POST /api/attempts。2026-10-11 已在 [W3](JOB_SEEKER_W3_DELIVERY.md) 接入个人卡、观察与卡点接口，包括 PATCH；统计口径仍待 W4。
 
 ## 5. 队列与统计口径
 
-W1 统一扩展 roundSize、设置、首页链接与总结为 3/5/10/20。已有带 queue 的 URL 优先恢复旧队列；目标、掌握状态、日期或午夜跨日都不能覆盖它。停用题按当前跳过规则处理。W0 只提供档位契约，当前页面仍为 10/20 题。
+W1 统一扩展 roundSize、设置、首页链接与总结为 3/5/10/20。已有带 queue 的 URL 优先恢复旧队列；目标、掌握状态、日期或午夜跨日都不能覆盖它。停用题按当前跳过规则处理。W0 交付时只提供档位契约；W1 已接入上述规模。
 
 目标推荐在当前范围内按到期 → 正式练过的薄弱题 → 未正式练过的路径题补齐，先排除北京时间当天已正式完成的题并按 ID 去重。前两类沿用原有到期排序与最新正式完成时间排序；简历路径新题按 P0/P1/P2、项目固定顺序 VendorGuard/发票实习/综合/技术基础、题目 ID 升序。通用核心的新题仍使用原 30 题路径，普通 640 题不会自动成为通用新题。
 

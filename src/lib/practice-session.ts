@@ -1,4 +1,8 @@
 import type { QuestionStatus } from "@/db/schema";
+import {
+  learningRoundSizes,
+  type LearningRoundSize,
+} from "@/lib/learning-contract";
 
 const MAX_QUEUE_SIZE = 1000;
 const MAX_QUESTION_ID = 2147483647;
@@ -14,6 +18,7 @@ export function parsePracticeMode(value: string | undefined): PracticeMode {
     : "sequential";
 }
 export type RoundCompletion = {
+  eventId?: number;
   questionId: number;
   status: QuestionStatus;
   answer: string | null;
@@ -30,8 +35,8 @@ export function parseRoundId(value: string | undefined): string | undefined {
     : undefined;
 }
 
-export function roundSize(value: string | undefined): 10 | 20 {
-  return value === "20" ? 20 : 10;
+export function roundSize(value: string | undefined): LearningRoundSize {
+  return learningRoundSizes.find((size) => String(size) === value) ?? 10;
 }
 
 export function roundLocation(

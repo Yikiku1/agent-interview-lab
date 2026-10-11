@@ -132,17 +132,73 @@ const boundaries = {
     "这是改进或假设题；先说明简历中的现状，再用“如果扩展，我会……”回答。",
 };
 
+export type ResumeLearningEntry = {
+  kind: ResumeKind;
+  boundary: string;
+  basis: string;
+  oral: string;
+  points: readonly [string, string, string];
+  evidence: string;
+  followUps: readonly [string, string, string];
+  pitfall: string;
+  selfAssessment: string;
+  sources: readonly [label: string, url: string][];
+};
+
+export function resumeQuestionTitle(entry: ResumeEntry, scope: ProjectScope) {
+  return `【简历 ${entry.priority} · ${scope}】${entry.question}`;
+}
+
+export function resumeLearningEntry(
+  entry: ResumeEntry,
+  sources: ResumeGroup["sources"],
+): ResumeLearningEntry {
+  const [page, section, claim] = resumeSource.anchors[entry.source];
+  return {
+    kind: entry.kind,
+    boundary: boundaries[entry.kind],
+    basis: `来源：指定简历第 ${page} 页，${section}。\n\n> ${claim}\n\n${resumeSource.snapshot}`,
+    oral: entry.oral,
+    points: entry.points,
+    evidence: entry.evidence,
+    followUps: entry.followUps,
+    pitfall: entry.pitfall,
+    selfAssessment: `- 不会：不能解释题目中的机制，或混淆简历事实与设想。\n- 模糊：能说出结论，但讲不清“${entry.followUps[0]}”或缺少可核对例子。\n- 掌握：能独立讲清三个回答要点，用上述场景说明判断过程，并承接三个追问；本人经历与扩展设计表述准确。`,
+    sources,
+  };
+}
+
+export function resumeLearningAnswer(entry: ResumeLearningEntry) {
+  return [
+    "### 简历依据与能力边界",
+    `${entry.basis}\n\n${entry.boundary}`,
+    "### 60–90 秒回答思路",
+    entry.oral,
+    "### 深入拆解与回答要点",
+    entry.points.map((point) => `- ${point}`).join("\n"),
+    "### 场景与验证准备",
+    entry.evidence,
+    "### 连续追问",
+    entry.followUps.map((question) => `- ${question}`).join("\n"),
+    "### 易错点与表达边界",
+    entry.pitfall,
+    "### 自评标准",
+    entry.selfAssessment,
+    "### 延伸资料",
+    entry.sources.map(([label, url]) => `- [${label}](${url})`).join("\n"),
+  ].join("\n\n");
+}
+
 export function resumeQuestionsFrom(
   groups: readonly ResumeGroup[],
 ): SeedQuestion[] {
   return groups.flatMap((group) =>
     group.entries.map((entry) => {
-      const [page, section, claim] = resumeSource.anchors[entry.source];
       return {
         category: group.category,
         subcategory: `简历专项 · ${group.scope}`,
         difficulty: entry.difficulty,
-        question: `【简历 ${entry.priority} · ${group.scope}】${entry.question}`,
+        question: resumeQuestionTitle(entry, group.scope),
         tags: [
           group.category,
           "简历专项",
@@ -150,26 +206,7 @@ export function resumeQuestionsFrom(
           entry.priority,
           entry.kind,
         ],
-        answer: [
-          "### 简历依据与能力边界",
-          `来源：指定简历第 ${page} 页，${section}。\n\n> ${claim}\n\n${resumeSource.snapshot}\n\n${boundaries[entry.kind]}`,
-          "### 60–90 秒回答思路",
-          entry.oral,
-          "### 深入拆解与回答要点",
-          entry.points.map((point) => `- ${point}`).join("\n"),
-          "### 场景与验证准备",
-          entry.evidence,
-          "### 连续追问",
-          entry.followUps.map((question) => `- ${question}`).join("\n"),
-          "### 易错点与表达边界",
-          entry.pitfall,
-          "### 自评标准",
-          `- 不会：不能解释题目中的机制，或混淆简历事实与设想。\n- 模糊：能说出结论，但讲不清“${entry.followUps[0]}”或缺少可核对例子。\n- 掌握：能独立讲清三个回答要点，用上述场景说明判断过程，并承接三个追问；本人经历与扩展设计表述准确。`,
-          "### 延伸资料",
-          group.sources
-            .map(([label, url]) => `- [${label}](${url})`)
-            .join("\n"),
-        ].join("\n\n"),
+        answer: resumeLearningAnswer(resumeLearningEntry(entry, group.sources)),
       };
     }),
   );

@@ -6,6 +6,9 @@ import { QuestionList } from "@/components/question/question-list";
 import { getDueReviewQuestions, getReviewQuestions } from "@/lib/questions";
 import { cn } from "@/lib/utils";
 import { getRequestTime } from "@/lib/request-time";
+import { getLearningTarget } from "@/lib/learning-target";
+import { parseLearningScope, scopeForTarget } from "@/lib/learning-contract";
+import { InvalidFilters } from "@/components/question/invalid-filters";
 
 export const dynamic = "force-dynamic";
 
@@ -16,20 +19,40 @@ export default async function ReviewPage({
 }) {
   const params = await searchParams;
   const weakView = params.view === "weak";
-  const [due, weak] = await Promise.all([
+  const outsideView = params.view === "outside";
+  let scope = {};
+  if (outsideView) {
+    try {
+      scope = parseLearningScope(params);
+    } catch {
+      return <InvalidFilters href="/review" />;
+    }
+    if (!Object.values(scope).some(Boolean)) {
+      const target = await getLearningTarget();
+      if (target) scope = scopeForTarget(target);
+    }
+  }
+  const [due, weak, outside] = await Promise.all([
     getDueReviewQuestions(),
     getReviewQuestions(),
+    outsideView
+      ? getDueReviewQuestions(new Date(getRequestTime()), scope, true)
+      : Promise.resolve([]),
   ]);
-  const rows = weakView ? weak : due;
+  const rows = outsideView ? outside : weakView ? weak : due;
   return (
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <h1 className="page-title">复习安排</h1>
+          <h1 className="page-title">
+            {outsideView ? "目标范围外的到期题" : "复习安排"}
+          </h1>
           <p className="page-description">
-            {weakView
-              ? "先巩固不会的题目，再练模糊的知识点。"
-              : "按到期时间巩固记忆，已掌握的题目也会按计划回来。"}
+            {outsideView
+              ? "这些题不占目标推荐队列，可以在这里单独复习。"
+              : weakView
+                ? "先巩固不会的题目，再练模糊的知识点。"
+                : "按到期时间巩固记忆，已掌握的题目也会按计划回来。"}
           </p>
         </div>
         {rows.length ? (
@@ -37,9 +60,14 @@ export default async function ReviewPage({
             <Link
               prefetch={false}
               href={
-                weakView
-                  ? "/practice/session?mode=weak&includeFuzzy=1"
-                  : "/practice/session?mode=due"
+                outsideView
+                  ? `/practice/session?mode=due&queue=${outside
+                      .slice(0, 10)
+                      .map((row) => row.question.id)
+                      .join(",")}`
+                  : weakView
+                    ? "/practice/session?mode=weak&includeFuzzy=1"
+                    : "/practice/session?mode=due"
               }
             >
               <RotateCcw data-icon="inline-start" />
@@ -54,8 +82,18 @@ export default async function ReviewPage({
             href: "/review",
             label: "到期复习",
             count: due.length,
-            selected: !weakView,
+            selected: !weakView && !outsideView,
           },
+          ...(outsideView
+            ? [
+                {
+                  href: "/review?view=outside",
+                  label: "范围外到期",
+                  count: outside.length,
+                  selected: true,
+                },
+              ]
+            : []),
           {
             href: "/review?view=weak",
             label: "全部薄弱题",

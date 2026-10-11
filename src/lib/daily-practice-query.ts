@@ -2,10 +2,19 @@ import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { questions, reviewEvents, userQuestionProgress } from "@/db/schema";
-import { DEFAULT_USER_ID } from "@/lib/questions";
+import {
+  DEFAULT_USER_ID,
+  questionCondition,
+  type Filters,
+} from "@/lib/questions";
+import type { LearningRoundSize } from "@/lib/learning-contract";
 import { beijingDayBounds, selectDailyPractice } from "@/lib/daily-practice";
 
-export async function getDailyPractice(now = new Date()) {
+export async function getDailyPractice(
+  now = new Date(),
+  filters: Filters = {},
+  size: LearningRoundSize = 10,
+) {
   const { start, end } = beijingDayBounds(now);
   const practice = db
     .select({
@@ -32,6 +41,9 @@ export async function getDailyPractice(now = new Date()) {
       id: questions.id,
       question: questions.question,
       category: questions.category,
+      tags: questions.tags,
+      subcategory: questions.subcategory,
+      inScope: sql<boolean>`coalesce(${questionCondition(filters)}, false)`,
       active: questions.active,
       status: userQuestionProgress.status,
       nextReviewAt: userQuestionProgress.nextReviewAt,
@@ -48,11 +60,20 @@ export async function getDailyPractice(now = new Date()) {
     )
     .leftJoin(practice, eq(practice.questionId, questions.id))
     .where(eq(questions.active, true));
-  return selectDailyPractice(
-    rows.map((row) => ({
-      ...row,
-      completedToday: row.completedToday ?? false,
-    })),
-    now,
-  );
+  const scoped = rows.filter((row) => row.inScope);
+  return {
+    ...selectDailyPractice(
+      scoped.map((row) => ({
+        ...row,
+        completedToday: row.completedToday ?? false,
+      })),
+      now,
+      { size, resumePath: filters.track === "resume" },
+    ),
+    scopeTotal: scoped.length,
+    outsideDue: rows.filter(
+      (row) =>
+        !row.inScope && row.nextReviewAt !== null && row.nextReviewAt <= now,
+    ).length,
+  };
 }

@@ -100,7 +100,7 @@ export const learningScopePayload = z
   });
 export type LearningScope = z.infer<typeof learningScopePayload>;
 
-// W1 will merge these keys with the existing category/difficulty/status/search parser.
+// Shared with the category/difficulty/status/search parser in W1.
 export function parseLearningScope(
   input: Record<string, string | string[] | undefined>,
 ) {
@@ -116,7 +116,9 @@ export function parseLearningScope(
   return learningScopePayload.parse(scope);
 }
 
-export function scopeForTarget(target: LearningTargetPayload): LearningScope {
+export function scopeForTarget(
+  target: Pick<LearningTargetPayload, "preset" | "projectScope" | "priority">,
+): LearningScope {
   return learningScopePayload.parse({
     preset: target.preset,
     ...(target.projectScope ? { project: target.projectScope } : {}),

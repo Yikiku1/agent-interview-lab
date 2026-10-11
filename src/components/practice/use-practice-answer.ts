@@ -84,6 +84,7 @@ export function usePracticeAnswer(
       }
       persist({ ...pending, completed: true });
       onRecorded({
+        eventId: typeof body?.id === "number" ? body.id : undefined,
         questionId,
         attemptId: submission.attemptId,
         status: submission.status,

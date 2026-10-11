@@ -1,5 +1,11 @@
 import { corePath } from "@/db/core-path";
 import type { QuestionStatus } from "@/db/schema";
+import {
+  resumeMetadata,
+  projectScopes,
+  resumePriorities,
+  type LearningRoundSize,
+} from "@/lib/learning-contract";
 
 export type DailyCandidate = {
   id: number;
@@ -10,8 +16,10 @@ export type DailyCandidate = {
   nextReviewAt: Date | null;
   lastPracticeAt: Date | null;
   completedToday: boolean;
+  tags?: readonly string[];
+  subcategory?: string;
 };
-export type DailySource = "due" | "weak" | "core";
+export type DailySource = "due" | "weak" | "core" | "path";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
@@ -40,7 +48,9 @@ function pathIndex(row: DailyCandidate) {
 export function selectDailyPractice(
   candidates: readonly DailyCandidate[],
   now: Date,
+  options: { size?: LearningRoundSize; resumePath?: boolean } = {},
 ) {
+  const size = options.size ?? 10;
   const active = [
     ...new Map(
       candidates.filter((row) => row.active).map((row) => [row.id, row]),
@@ -53,14 +63,19 @@ export function selectDailyPractice(
   const newCore = core.filter((row) => row.lastPracticeAt === null);
   const queue: { id: number; source: DailySource; category: string }[] = [];
   const selected = new Set<number>();
-  const counts = { due: 0, weak: 0, core: 0 };
+  const counts: { due: number; weak: number; core: number; path?: number } = {
+    due: 0,
+    weak: 0,
+    core: 0,
+    ...(options.resumePath ? { path: 0 } : {}),
+  };
   function append(rows: DailyCandidate[], source: DailySource) {
     for (const row of rows) {
-      if (queue.length === 10) break;
+      if (queue.length === size) break;
       if (selected.has(row.id)) continue;
       selected.add(row.id);
       queue.push({ id: row.id, source, category: row.category });
-      counts[source]++;
+      counts[source] = (counts[source] ?? 0) + 1;
     }
   }
   append(
@@ -90,10 +105,35 @@ export function selectDailyPractice(
       ),
     "weak",
   );
-  append(
-    newCore.filter((row) => !row.completedToday),
-    "core",
-  );
+  if (options.resumePath) {
+    const path = available
+      .flatMap((row) => {
+        const metadata = resumeMetadata({
+          tags: row.tags ?? [],
+          subcategory: row.subcategory ?? "",
+        });
+        return metadata && row.lastPracticeAt === null
+          ? [{ row, metadata }]
+          : [];
+      })
+      .sort(
+        (a, b) =>
+          resumePriorities.indexOf(a.metadata.priority) -
+            resumePriorities.indexOf(b.metadata.priority) ||
+          projectScopes.indexOf(a.metadata.project) -
+            projectScopes.indexOf(b.metadata.project) ||
+          a.row.id - b.row.id,
+      );
+    append(
+      path.map((item) => item.row),
+      "path",
+    );
+  } else {
+    append(
+      newCore.filter((row) => !row.completedToday),
+      "core",
+    );
+  }
   return {
     queue,
     ids: queue.map((row) => row.id),

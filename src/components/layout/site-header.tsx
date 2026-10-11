@@ -12,6 +12,7 @@ const links = [
   { href: "/practice", label: "练习" },
   { href: "/questions", label: "题库" },
   { href: "/review", label: "复习" },
+  { href: "/practice-gaps", label: "卡点" },
   { href: "/stats", label: "统计" },
 ];
 
@@ -39,14 +40,16 @@ export function SiteHeader() {
         >
           {links.map(({ href, label }) => {
             const selected =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+              href === "/"
+                ? pathname === "/"
+                : pathname === href || pathname.startsWith(`${href}/`);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={selected ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 flex-1 items-center justify-center rounded-md px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex-none",
+                  "flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex-none sm:px-3",
                   selected && "bg-accent-soft font-medium text-accent",
                 )}
               >

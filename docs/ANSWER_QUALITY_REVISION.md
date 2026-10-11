@@ -1,6 +1,6 @@
 # 题库答案质量修订交付
 
-交付日期：2026-10-10（北京时间）。670 道启用题的答案已修订并导入个人 PostgreSQL，新生产构建已启动于 `http://localhost:3000`。本次没有修改题干或新增题目，W0 和本次修订均保留在工作区，未 commit / push。
+交付日期：2026-10-10（北京时间）。670 道启用题的答案已修订并导入个人 PostgreSQL，新生产构建已启动于 `http://localhost:3000`。本次没有修改题干或新增题目。随后按用户要求，W0 与本次修订已在 `3756f01` 提交并推送，再实施 [W1](JOB_SEEKER_W1_DELIVERY.md)；下文保留答案修订交付时的验证范围。
 
 ## 长度结果与时长口径
 
@@ -58,7 +58,7 @@ node --import tsx scripts/audit-answer-quality.ts --compare-db --output=docs/ANS
 
 题目 ID、题干、分类、子分类、难度、标签、启用状态和创建时间保留；`updated_at` 和 sequence 按既有 upsert 机制变化。1 个用户、13 条进度、14 条历史事件全字段保留，包含原始时间戳。网页检查前后再次逐字段比对一致，没有创建测试练习事件。
 
-个人库仍是 `users`、`questions`、`user_question_progress`、`review_events` 四表，未执行 W0 迁移。此次恢复演练验证答案导入，W1 启用新业务表前仍按 [W0 契约](JOB_SEEKER_W0_CONTRACT.md) 执行对应升级步骤。
+答案修订交付时，个人库仍是 `users`、`questions`、`user_question_progress`、`review_events` 四表，未执行 W0 迁移。此次恢复演练只验证答案导入。随后 W1 依照 [W0 契约](JOB_SEEKER_W0_CONTRACT.md) 另做恢复与迁移演练，已升级个人库；证据见 [W1 交付](JOB_SEEKER_W1_DELIVERY.md)。
 
 ## 验证结果
 

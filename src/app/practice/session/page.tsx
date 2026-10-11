@@ -6,7 +6,11 @@ import { Empty } from "@/components/ui/empty";
 import { getRequestTime } from "@/lib/request-time";
 import { getDailyPractice } from "@/lib/daily-practice-query";
 import { getCoreLearningEntry } from "@/db/core-answers";
+import { getResumeLearningEntry } from "@/db/resume-questions";
 import { PracticeSession } from "@/components/practice/practice-session";
+import { InvalidFilters } from "@/components/question/invalid-filters";
+import { getLearningTarget } from "@/lib/learning-target";
+import { roundSizeForMinutes, scopeForTarget } from "@/lib/learning-contract";
 import {
   getPracticeSelection,
   getQuestionsByIds,
@@ -36,18 +40,35 @@ export default async function PracticeSessionPage({
   const mode = parsePracticeMode(get("mode"));
   const referenceTime = getRequestTime();
   const savedQueue = parseQueueIds(get("queue"));
-  const queue =
-    savedQueue ??
-    (mode === "daily"
-      ? (await getDailyPractice(new Date(referenceTime))).ids
-      : await getPracticeSelection(
-          parseFilters(params),
-          mode,
-          roundSize(get("size")),
-          get("seed") ?? "7919",
-          get("includeFuzzy") === "1",
-          new Date(referenceTime),
-        ));
+  let queue = savedQueue;
+  if (!queue) {
+    let filters;
+    try {
+      filters = parseFilters(params);
+    } catch {
+      return <InvalidFilters href="/practice" />;
+    }
+    let size = roundSize(get("size"));
+    if (mode === "daily" && !Object.values(filters).some(Boolean)) {
+      const target = await getLearningTarget();
+      if (target) {
+        filters = scopeForTarget(target);
+        if (!get("size"))
+          size = roundSizeForMinutes(target.dailyMinutes as 5 | 10 | 20 | 40);
+      }
+    }
+    queue =
+      mode === "daily"
+        ? (await getDailyPractice(new Date(referenceTime), filters, size)).ids
+        : await getPracticeSelection(
+            filters,
+            mode,
+            size,
+            get("seed") ?? "7919",
+            get("includeFuzzy") === "1",
+            new Date(referenceTime),
+          );
+  }
   const rows = orderSavedQueue(await getQuestionsByIds(queue), queue);
   const priorSkipped = Number(get("skipped") ?? 0);
   const skippedCount =
@@ -117,10 +138,21 @@ export default async function PracticeSessionPage({
     roundId,
     rows.map((row) => row.question.id),
   );
+  const resumeEntries = Object.fromEntries(
+    rows.flatMap(({ question }) => {
+      const entry = getResumeLearningEntry(question);
+      return entry ? [[question.id, entry]] : [];
+    }),
+  );
   return (
     <PracticeSession
       key={roundId}
-      rows={rows}
+      rows={rows.map((row) =>
+        resumeEntries[row.question.id]
+          ? { ...row, question: { ...row.question, answer: "" } }
+          : row,
+      )}
+      resumeEntries={resumeEntries}
       learningEntries={Object.fromEntries(
         rows.flatMap(({ question }) => {
           const entry = getCoreLearningEntry(

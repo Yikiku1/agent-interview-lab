@@ -3,20 +3,16 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { categories, difficultyLabels } from "@/lib/utils";
+import { LearningScopeFields } from "./learning-scope-fields";
+import type { Filters } from "@/lib/question-filters";
 
-export function QuestionFilters({
-  filters,
-}: {
-  filters: {
-    search?: string;
-    category?: string;
-    difficulty?: string;
-    status?: string;
-  };
-}) {
+export function QuestionFilters({ filters }: { filters: Filters }) {
   const active = Object.values(filters).some(Boolean);
   return (
     <form action="/questions" role="search" className="panel filter-bar">
+      <div className="col-span-full">
+        <LearningScopeFields initial={filters} prefix="filter" />
+      </div>
       <Field className="filter-search">
         <FieldLabel htmlFor="question-search">搜索题目</FieldLabel>
         <div className="relative">

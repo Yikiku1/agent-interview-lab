@@ -5,6 +5,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { QuestionFilters } from "@/components/question/question-filters";
 import { QuestionList } from "@/components/question/question-list";
 import { listQuestions, parseFilters } from "@/lib/questions";
+import { InvalidFilters } from "@/components/question/invalid-filters";
+import { filtersQuery } from "@/lib/learning-options";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,12 @@ export default async function QuestionsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const filters = parseFilters(params);
+  let filters;
+  try {
+    filters = parseFilters(params);
+  } catch {
+    return <InvalidFilters />;
+  }
   const rawPage = Number(params.page ?? 1);
   const page = Number.isFinite(rawPage) ? Math.max(1, Math.floor(rawPage)) : 1;
   const firstResult = await listQuestions(filters, page);
@@ -24,10 +31,7 @@ export default async function QuestionsPage({
       ? firstResult
       : await listQuestions(filters, currentPage);
   const pageHref = (target: number) => {
-    const query = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) query.set(key, value);
-    });
+    const query = filtersQuery(filters);
     query.set("page", String(target));
     return `/questions?${query.toString()}`;
   };
@@ -43,6 +47,16 @@ export default async function QuestionsPage({
         <span className="text-sm tabular-nums text-muted-foreground">
           {total} 道符合条件
         </span>
+        {total ? (
+          <Button asChild>
+            <Link
+              prefetch={false}
+              href={`/practice/session?${filtersQuery(filters)}&mode=sequential&size=5`}
+            >
+              练习当前范围 5 题
+            </Link>
+          </Button>
+        ) : null}
       </div>
       <QuestionFilters filters={filters} />
       {rows.length ? (

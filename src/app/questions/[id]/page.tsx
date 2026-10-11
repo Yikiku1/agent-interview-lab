@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { MarkdownAnswer } from "@/components/question/markdown-answer";
+import { ResumeLearningAnswer } from "@/components/question/resume-learning-answer";
+import { ObservationEditor } from "@/components/practice/observation-editor";
+import { ObservationHistory } from "@/components/question/observation-history";
+import { getObservations } from "@/lib/practice-notes";
+import { getCoreLearningEntry } from "@/db/core-answers";
+import { getResumeLearningEntry } from "@/db/resume-questions";
 import { DueLabel } from "@/components/question/due-label";
 import { StatusActions } from "@/components/question/status-actions";
 import { StatusBadge } from "@/components/question/status-badge";
@@ -26,12 +32,14 @@ export default async function QuestionDetailPage({
   const numericId = Number(id);
   if (!Number.isInteger(numericId) || numericId <= 0 || numericId > 2147483647)
     notFound();
-  const [row, history] = await Promise.all([
-    getQuestion(numericId),
+  const [row, history, observations] = await Promise.all([
+    getQuestion(numericId, true),
     getQuestionHistory(numericId, Number(search.historyPage ?? 1)),
+    getObservations(numericId),
   ]);
   if (!row) notFound();
   const { question, status } = row;
+  const resumeEntry = getResumeLearningEntry(question);
   return (
     <div className="reading-column page-stack">
       <div className="flex items-center justify-between gap-3">
@@ -42,15 +50,19 @@ export default async function QuestionDetailPage({
           <ArrowLeft className="size-4" aria-hidden="true" />
           返回题库
         </Link>
-        <Button asChild>
-          <Link
-            prefetch={false}
-            href={`/practice/session?queue=${question.id}&questionId=${question.id}`}
-          >
-            练习本题
-            <ArrowRight data-icon="inline-end" />
-          </Link>
-        </Button>
+        {question.active ? (
+          <Button asChild>
+            <Link
+              prefetch={false}
+              href={`/practice/session?queue=${question.id}&questionId=${question.id}`}
+            >
+              练习本题
+              <ArrowRight data-icon="inline-end" />
+            </Link>
+          </Button>
+        ) : (
+          <Badge>已停用，资料保留</Badge>
+        )}
       </div>
       <article className="flex flex-col gap-7">
         <header className="flex flex-col gap-4">
@@ -76,8 +88,36 @@ export default async function QuestionDetailPage({
           <h2 id="detail-answer-title" className="section-title">
             参考答案
           </h2>
-          <MarkdownAnswer>{question.answer}</MarkdownAnswer>
+          {resumeEntry ? (
+            <ResumeLearningAnswer entry={resumeEntry} />
+          ) : (
+            <MarkdownAnswer>{question.answer}</MarkdownAnswer>
+          )}
         </section>
+        <div className="flex flex-wrap gap-4">
+          <Link
+            className="subtle-link"
+            href={`/questions/${question.id}/answer-card`}
+          >
+            查看 / 编辑我的回答卡
+          </Link>
+          <Link className="subtle-link" href="/practice-gaps">
+            查看卡点与补练
+          </Link>
+        </div>
+        <div className="panel panel-padding">
+          <ObservationEditor
+            questionId={question.id}
+            context="detail"
+            points={
+              resumeEntry?.points ??
+              getCoreLearningEntry(question.question, question.category)
+                ?.keyPoints ??
+              []
+            }
+          />
+        </div>
+        <ObservationHistory rows={observations} />
         <section
           aria-labelledby="mastery-title"
           className="panel panel-padding flex flex-col gap-4"
@@ -88,7 +128,13 @@ export default async function QuestionDetailPage({
             </h2>
             <DueLabel at={row.nextReviewAt} now={getRequestTime()} />
           </div>
-          <StatusActions questionId={question.id} initialStatus={status} />
+          {question.active ? (
+            <StatusActions questionId={question.id} initialStatus={status} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              题目已停用，原自评与复习记录保留。
+            </p>
+          )}
         </section>
         <section
           id="history"
@@ -136,6 +182,22 @@ export default async function QuestionDetailPage({
                         : "本次未填写文字回答。"}
                     </p>
                   )}
+                  {event.kind === "practice" ? (
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      <Link
+                        className="subtle-link"
+                        href={`/questions/${question.id}/history/${event.id}`}
+                      >
+                        查看当次回答与自查
+                      </Link>
+                      <Link
+                        className="subtle-link"
+                        href={`/questions/${question.id}/answer-card?fromEvent=${event.id}`}
+                      >
+                        查看 / 编辑我的回答卡
+                      </Link>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>

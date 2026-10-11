@@ -23,7 +23,9 @@ import {
   MasteryGuide,
 } from "@/components/question/mastery-control";
 import { CoreLearningAnswer } from "@/components/question/core-learning-answer";
+import { ResumeLearningAnswer } from "@/components/question/resume-learning-answer";
 import type { CoreLearningEntry } from "@/db/learning-content";
+import type { ResumeLearningEntry } from "@/db/resume-content";
 import { StatusBadge } from "@/components/question/status-badge";
 import { saveProgress } from "@/components/question/status-actions";
 import type { Question, QuestionStatus } from "@/db/schema";
@@ -38,6 +40,7 @@ import { MAX_ANSWER_LENGTH } from "@/lib/practice-draft";
 import { reviewDateLabel } from "@/lib/review-schedule";
 import { usePracticeAnswer } from "@/components/practice/use-practice-answer";
 import { RoundSummary } from "@/components/practice/round-summary";
+import { ObservationEditor } from "@/components/practice/observation-editor";
 
 type Row = { question: Question; status: QuestionStatus | null };
 const modeLabels = {
@@ -57,6 +60,7 @@ export function PracticeSession({
   initialFinished,
   referenceTime,
   learningEntries,
+  resumeEntries,
   skippedCount,
 }: {
   rows: Row[];
@@ -67,6 +71,7 @@ export function PracticeSession({
   initialFinished: boolean;
   referenceTime: number;
   learningEntries: Record<number, CoreLearningEntry>;
+  resumeEntries: Record<number, ResumeLearningEntry>;
   skippedCount: number;
 }) {
   const [index, setIndex] = useState(initialIndex);
@@ -246,6 +251,15 @@ export function PracticeSession({
         completions={completions}
         onResume={(id) => position(ids.indexOf(id))}
         referenceTime={referenceTime}
+        roundId={roundId}
+        points={Object.fromEntries(
+          rows.map(({ question }) => [
+            question.id,
+            resumeEntries[question.id]?.points ??
+              learningEntries[question.id]?.keyPoints ??
+              [],
+          ]),
+        )}
       />
     );
 
@@ -433,7 +447,12 @@ export function PracticeSession({
                 <h2 id="reference-title" className="section-title">
                   参考答案
                 </h2>
-                {learningEntries[current.question.id] ? (
+                {resumeEntries[current.question.id] ? (
+                  <ResumeLearningAnswer
+                    key={current.question.id}
+                    entry={resumeEntries[current.question.id]}
+                  />
+                ) : learningEntries[current.question.id] ? (
                   <CoreLearningAnswer
                     key={current.question.id}
                     entry={learningEntries[current.question.id]}
@@ -444,6 +463,31 @@ export function PracticeSession({
               </>
             ) : null}
           </section>
+          {revealed ? (
+            <div className="reference-answer">
+              <Link
+                className="subtle-link"
+                href={`/questions/${current.question.id}/answer-card`}
+              >
+                查看 / 编辑我的回答卡
+              </Link>
+              <ObservationEditor
+                key={current.question.id}
+                questionId={current.question.id}
+                context={roundId}
+                practiceRoundId={roundId}
+                points={
+                  resumeEntries[current.question.id]?.points ??
+                  learningEntries[current.question.id]?.keyPoints ??
+                  []
+                }
+                reviewEventId={completions[current.question.id]?.eventId}
+                completionPending={Boolean(
+                  answer.draft.submission && !completions[current.question.id],
+                )}
+              />
+            </div>
+          ) : null}
         </div>
         <div className="practice-actions">
           <div className="flex flex-wrap items-end justify-between gap-5">

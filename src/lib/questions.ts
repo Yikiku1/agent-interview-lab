@@ -21,41 +21,22 @@ import {
   userQuestionProgress,
   type QuestionStatus,
 } from "@/db/schema";
-import { categories, isCategory } from "@/lib/utils";
+import { categories } from "@/lib/utils";
+import {
+  scopeProjects,
+  projectScopes,
+  resumePriorities,
+  resumeKinds,
+  type LearningRoundSize,
+} from "@/lib/learning-contract";
+import type { Filters } from "@/lib/question-filters";
+export { parseFilters } from "@/lib/question-filters";
+export type { Filters } from "@/lib/question-filters";
 import type { PracticeMode, RoundCompletion } from "@/lib/practice-session";
 
 export const DEFAULT_USER_ID = "default";
-export type Filters = {
-  category?: string;
-  difficulty?: string;
-  status?: string;
-  search?: string;
-};
-
-export function parseFilters(
-  input: Record<string, string | string[] | undefined>,
-): Filters {
-  const get = (key: string) =>
-    typeof input[key] === "string" ? (input[key] as string) : undefined;
-  const category = get("category");
-  const difficulty = get("difficulty");
-  const status = get("status");
-  return {
-    category: category && isCategory(category) ? category : undefined,
-    difficulty:
-      difficulty && ["easy", "medium", "hard"].includes(difficulty)
-        ? difficulty
-        : undefined,
-    status:
-      status && ["unmarked", "mastered", "fuzzy", "unknown"].includes(status)
-        ? status
-        : undefined,
-    search: get("search")?.trim().slice(0, 100) || undefined,
-  };
-}
-
-function clauses(filters: Filters): SQL[] {
-  const where: SQL[] = [eq(questions.active, true)];
+function clauses(filters: Filters, includeInactive = false): SQL[] {
+  const where: SQL[] = includeInactive ? [] : [eq(questions.active, true)];
   if (filters.category) where.push(eq(questions.category, filters.category));
   if (filters.difficulty)
     where.push(
@@ -72,7 +53,62 @@ function clauses(filters: Filters): SQL[] {
     );
   if (filters.search)
     where.push(ilike(questions.question, `%${filters.search}%`));
+  if (filters.track) {
+    // Match the metadata contract, including malformed rows inserted outside seed.
+    const exactlyOne = (values: readonly string[]) =>
+      sql`(${sql.join(
+        values.map(
+          (value) =>
+            sql`case when ${questions.tags} @> ARRAY[${value}]::text[] then 1 else 0 end`,
+        ),
+        sql` + `,
+      )}) = 1`;
+    where.push(
+      sql`${questions.tags} @> ARRAY['简历专项']::text[]`,
+      exactlyOne(projectScopes),
+      exactlyOne(resumePriorities),
+      exactlyOne(resumeKinds),
+      or(
+        ...scopeProjects(filters).map((project) =>
+          and(
+            sql`${questions.tags} @> ARRAY[${project}]::text[]`,
+            eq(questions.subcategory, `简历专项 · ${project}`),
+          ),
+        ),
+      )!,
+    );
+    if (filters.resumePriority)
+      where.push(
+        sql`${questions.tags} @> ARRAY[${filters.resumePriority}]::text[]`,
+      );
+    if (filters.resumeKind)
+      where.push(
+        sql`${questions.tags} @> ARRAY[${filters.resumeKind}]::text[]`,
+      );
+  }
   return where;
+}
+
+export function questionCondition(
+  filters: Filters = {},
+  includeInactive = false,
+) {
+  return and(...clauses(filters, includeInactive));
+}
+
+export async function getScopeCount(filters: Filters = {}) {
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(questions)
+    .leftJoin(
+      userQuestionProgress,
+      and(
+        eq(userQuestionProgress.questionId, questions.id),
+        eq(userQuestionProgress.userId, DEFAULT_USER_ID),
+      ),
+    )
+    .where(questionCondition(filters));
+  return total;
 }
 
 export async function listQuestions(
@@ -161,7 +197,7 @@ function dueOrder() {
 export async function getPracticeSelection(
   filters: Filters,
   mode: Exclude<PracticeMode, "daily">,
-  size: 10 | 20,
+  size: LearningRoundSize,
   seed: string,
   includeFuzzy: boolean,
   now = new Date(),
@@ -212,6 +248,7 @@ export async function getRoundCompletions(
   if (!ids.length) return [];
   const rows = await db
     .selectDistinctOn([reviewEvents.questionId], {
+      eventId: reviewEvents.id,
       questionId: reviewEvents.questionId,
       status: reviewEvents.status,
       answer: reviewEvents.answer,
@@ -230,6 +267,7 @@ export async function getRoundCompletions(
       and(
         eq(reviewEvents.userId, DEFAULT_USER_ID),
         eq(reviewEvents.roundId, roundId),
+        eq(reviewEvents.kind, "practice"),
         inArray(reviewEvents.questionId, ids),
       ),
     )
@@ -251,7 +289,11 @@ export async function getRoundCompletions(
   );
 }
 
-export async function getDueReviewQuestions(now = new Date()) {
+export async function getDueReviewQuestions(
+  now = new Date(),
+  filters: Filters = {},
+  outside = false,
+) {
   return db
     .select({
       question: questions,
@@ -264,7 +306,12 @@ export async function getDueReviewQuestions(now = new Date()) {
       and(
         eq(userQuestionProgress.userId, DEFAULT_USER_ID),
         eq(questions.active, true),
-        dueCondition(now),
+        outside
+          ? lte(userQuestionProgress.nextReviewAt, now)
+          : dueCondition(now),
+        outside
+          ? sql`not coalesce(${questionCondition(filters)}, false)`
+          : questionCondition(filters),
       ),
     )
     .orderBy(...dueOrder());
@@ -286,7 +333,7 @@ export async function getQuestionsByIds(ids: number[]) {
     .where(and(eq(questions.active, true), inArray(questions.id, ids)));
 }
 
-export async function getQuestion(id: number) {
+export async function getQuestion(id: number, includeInactive = false) {
   const [row] = await db
     .select({
       question: questions,
@@ -301,7 +348,12 @@ export async function getQuestion(id: number) {
         eq(userQuestionProgress.userId, DEFAULT_USER_ID),
       ),
     )
-    .where(and(eq(questions.id, id), eq(questions.active, true)))
+    .where(
+      and(
+        eq(questions.id, id),
+        includeInactive ? undefined : eq(questions.active, true),
+      ),
+    )
     .limit(1);
   return row;
 }
