@@ -14,7 +14,11 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate:w0": "tsx src/db/migrate-learning-foundation-cli.ts",
     "db:migrate:w5": "tsx src/db/migrate-mock-interview-cli.ts",
-    "db:migrate:w6": "tsx src/db/migrate-interview-review-cli.ts"
+    "db:migrate:w6": "tsx src/db/migrate-interview-review-cli.ts",
+    "local:start": "pwsh -NoProfile -File scripts/start-local.ps1",
+    "local:backup": "tsx scripts/local-data.ts backup",
+    "local:restore": "tsx scripts/local-data.ts restore",
+    "local:export": "tsx scripts/local-data.ts export"
   },
   "dependencies": {
     "@next/env": "16.3.6",

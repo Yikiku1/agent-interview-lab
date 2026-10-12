@@ -25,7 +25,8 @@ export async function startTestDatabase(
     port,
     user: "interview",
     password: "test-only",
-    persistent: false,
+    // Let this helper own cleanup retries; the library deletes immediately on stop.
+    persistent: true,
     initdbFlags: ["--encoding=UTF8"],
     postgresFlags: ["-h", "127.0.0.1"],
     onLog: () => {},

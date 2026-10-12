@@ -8,18 +8,18 @@
 
 ## 当前结论
 
-项目已具备个人面试学习闭环、固定项目模拟与真实面试复盘。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖与首期验收已在 `464218d` 提交推送；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟、连续追问与恢复已在 `1bbeb7b` 提交推送。2026-10-12 [W6](docs/JOB_SEEKER_W6_DELIVERY.md)完成真实复盘列表/新建/详情与编辑、原话与关联快照、关联后正式补练及范围复盘统计。个人库经独立恢复演练升级到十六表，新构建运行于 3000，原记录与四个序列保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W7–W8 待实施。短答起草范围检查通过，未做真人计时。
+项目已具备个人面试学习闭环、固定项目模拟、真实面试复盘与本地启动/备份恢复。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖已在 `464218d`；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟已在 `1bbeb7b`；[W6](docs/JOB_SEEKER_W6_DELIVERY.md) 真实复盘与关联补练已在 `a5fa217` 提交推送。2026-10-12 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)完成 Windows 启动、版本化十六表完整备份、显式独立空库恢复与可读导出；已实际恢复个人包并核对 Schema/全部记录/四序列，真实冷启动与重复复用通过。最终应用运行于 3000，原记录保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W8 按需评估，本轮未进入。短答起草范围检查通过，未做真人计时。
 
 本项目用于训练 Agent / LLM 应用开发面试；当前应用本身没有接入模型、自动评卷或 Agent 执行服务。使用固定 `default` 用户，个人本地使用，尚未实现登录和跨设备草稿同步。
 
-| 项目     | 本次核实状态                                                                                                                                                       |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Git 基线 | `main`，W5 已以 `1bbeb7b` 提交推送；W6 本批次验证后按用户约定提交推送，最新 SHA 以 Git 为准                                                                        |
-| 题库     | 源码和个人 PostgreSQL 均为 670 道启用题，7 个分类；原 570 题加 100 道简历专项题，保留 70 道基础题和 30 道精修核心题                                                |
-| 实际数据 | 2026-10-12 W6 升级/只读检查：1 用户、670 启用题、13 进度、14 事件；十六表全字段与四序列保留，五张首期业务表、三张模拟表和三张复盘表为空，迁移版本 3 条，无默认目标 |
-| 数据库   | 个人库 `interview_practice`，`127.0.0.1:5432`，持久目录 `.local/postgres`；只核实地址与数据库名，不记录凭证                                                        |
-| 应用     | 2026-10-12 W6 最终构建运行于 3000（PID 13520），27 项个人只读检查通过；PostgreSQL 5432（核实 PID 22016）；独立库 Chrome + Playwright 16 项交互通过                 |
-| 本次工作 | W6 已交付；真实复盘、独立原话与个人字段、手动关联、冲突/重试恢复、固定补练与 R07 计数；下一批次 W7 尚未开始                                                        |
+| 项目     | 本次核实状态                                                                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Git 基线 | `main`，W6 已以 `a5fa217` 提交推送；W7 本批次验证后按约定提交推送，最新 SHA 以 Git 为准                                                                           |
+| 题库     | 源码和个人 PostgreSQL 均为 670 道启用题，7 个分类；原 570 题加 100 道简历专项题，保留 70 道基础题和 30 道精修核心题                                               |
+| 实际数据 | 2026-10-12 W7 备份/独立恢复/启动核对：1 用户、670 启用题、13 进度、14 事件；十六表全字段与四序列保留，五张首期业务表、三张模拟表和三张复盘表为空，迁移3条、无目标 |
+| 数据库   | 个人库 `interview_practice`，`127.0.0.1:5432`，持久目录 `.local/postgres`；只核实地址与数据库名，不记录凭证                                                       |
+| 应用     | 2026-10-12 W7 最终构建运行于 3000（PID 23356），PostgreSQL 5432（PID 19532）；冷启动/复用/错误凭证拒绝、14项个人HTTP通过；W6浏览器16项保留原验证范围              |
+| 本次工作 | W7 已交付；Windows 入口、实际 Schema 全记录/序列备份、独立空库恢复与 JSON/Markdown 导出；W8 仅按需评估                                                            |
 
 ## 功能与产品约定
 
@@ -48,6 +48,8 @@
 | 界面       | 中文优先、中性色与低饱和青绿色、浅深主题、移动端单列，适合长时间阅读                                                                                          |
 
 通用今日推荐的“核心新题”仅来自 30 道核心路径。简历目标的“路径新题”来自共享范围内未正式练过的题，按 P0/P1/P2、项目、稳定 ID 排序。普通新增题仍不会自动成为通用核心新题。
+
+W7 的 Windows 启动入口复用健康服务，按需启动既有持久库/生产应用；缺构建先 build，连接/端口/Schema/构建/启动失败分别报错，不自动 seed、迁移或初始化。版本化完整备份保存实际十六表 Schema/全部字段/四序列，向显式另一空库事务恢复并严格比较；JSON/Markdown 独立可读导出缺少约束/序列，不用于完整恢复，浏览器未保存草稿均不在服务端备份中。
 
 ## 架构与定位入口
 
@@ -90,6 +92,8 @@
 
 简历题入口：`src/db/resume-questions.ts` 汇总，`resume-content.ts` 管理来源与结构，`resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts` 保存具体内容；[整理与导入说明](docs/RESUME_QUESTION_BANK.md)。
 
+W7 定位入口：`scripts/start-local.ps1` / `start-local.ts` 提供 Windows 启动与锁/日志/健康检查，`src/db/local-status.ts` / `src/app/api/local-status/route.ts` 只读核对数据库身份/十六表/default。`src/db/local-backup.ts` 管理真实 catalog、记录/序列、版本包校验、空库恢复与可读内容；`scripts/local-data.ts` 是公开 backup/restore/export CLI。`tests/unit/local-runtime.test.ts` 与 `tests/integration/local-backup.test.ts` 覆盖启动辨识、两种初始化 Schema、完整恢复和失败边界。
+
 ## 数据与不能破坏的契约
 
 当前个人数据库有十六张表：原 `users`、`questions`、`user_question_progress`、`review_events`，五张首期业务表 `learning_targets`、`personal_answer_cards`、`practice_observations`、`answer_point_checks`、`practice_gaps`，`app_schema_migrations`，W5 的 `mock_rounds`、`mock_nodes`、`mock_round_actions`，W6 的 `interview_reviews`、`interview_review_questions`、`interview_review_actions`。2026-10-10 W0、2026-10-12 W5/W6 均在独立恢复与迁移演练后受控升级个人库，原记录与四个序列保留；五张首期业务表、三张模拟表和三张复盘表均空，没有默认目标。字段和请求契约见 [W0](docs/JOB_SEEKER_W0_CONTRACT.md)、[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 与 [W6](docs/JOB_SEEKER_W6_DELIVERY.md)。
@@ -119,6 +123,8 @@
 - 原四表库升级 W0 使用版本化增量迁移，不能用 `db:push` 绕过记录；新空库继续用 `db:push` 建完整 Schema。导入模块和默认迁移命令都不执行迁移，W1 启用前按契约完成备份恢复演练。
 - 已受控升级 W0 的旧库通过 `db:migrate:w5 --apply` 追加模拟三表，先备份并实际独立恢复比对；无参数不连接数据库。W0/W5 迁移文件均已应用，不能改写或用 `db:push` 接管个人库。
 - 已受控升级 W0/W5 的旧库通过 `db:migrate:w6 --apply` 追加复盘三表，同样先备份并实际恢复比对；W6 文件也已应用并冻结。新空库使用完整 Schema，不能重跑旧恢复脚本覆盖个人新资料。
+- W7 备份只覆盖本项目 public Schema 十六表及全部归属序列，额外或不支持对象拒绝；迁移锁与稳定表 SHARE 锁保证普通写入后的记录/序列一致，文件在事务后写，manifest最后生成。CHECK经会话临时表解析器规范化，公共Schema/业务记录不变；迁移SQL不参与重建实际Schema。
+- W7 完整包包含版本/UTC与北京时间/迁移/文件SHA/Schema和全记录指纹；恢复必须显式 RESTORE_DATABASE_URL 指向另一空库，文件校验、建Schema/记录/外键/序列和全字段比对，失败事务回滚。默认离线检查，不连接或自动切换个人库；浏览器草稿不备份，可读JSON/Markdown不能替代完整包。
 
 ## 开发习惯与完成方式
 
@@ -126,7 +132,7 @@
 
 1. 开始时检查 Git 与真实运行状态，读本文及相关模块。已有个人进度和未提交改动要保留。
 2. 涉及 Next.js 时先读安装版本 `node_modules/next/dist/docs/` 的对应文档，再改实现，特别留意异步参数与缓存约定。
-3. 用户已授权的工作持续推进到可检查结果。2026-10-10 按“提交并推送，然后开始 W1”先推送基线并完成 W1；2026-10-11 按“继续”完成 W2/W3，再提交推送 W1–W3 并推进 W4；W4 已在 `464218d`、W5 在 `1bbeb7b` 推送。沿用用户“每次推进完记得提交推送”的约定：每批实现、验证和更新上下文后提交推送，再核对远端；本批次 W6，下一批次 W7，本轮不自动进入下一批。
+3. 用户已授权的工作持续推进到可检查结果。沿用用户“每次推进完记得提交推送”的约定：每批实现、验证和更新上下文后提交推送，再核对远端；W0–W6均已推送，本批次W7，本轮不自动进入W8。W8只有连续使用暴露实际需求后才评估。
 4. 使用现有样式变量和组件，保留中文阅读、移动端、主题、键盘操作与错误恢复。内容变更优先复用现有题库机制。
 5. 验证与风险相称：内容和可逆小改动无需为了覆盖实现而新增测试；涉及数据持久化、提交、恢复、推荐或选题时运行对应契约回归。
 6. 数据库集成测试使用独立临时 PostgreSQL，结束时清理，不在个人库造测试记录。个人库导入前保存可恢复备份，之后核实原题 ID、用户、进度和历史。
@@ -149,6 +155,10 @@ pnpm build
 直接入口：
 
 ```powershell
+pwsh -NoProfile -File scripts/start-local.ps1
+node --import tsx scripts/local-data.ts backup
+node --import tsx scripts/local-data.ts restore --from <备份目录>
+node --import tsx scripts/local-data.ts export
 node --import tsx src/db/seed.ts
 node --import tsx src/db/migrate-learning-foundation-cli.ts
 node --import tsx src/db/migrate-mock-interview-cli.ts
@@ -163,6 +173,8 @@ git diff --check
 ```
 
 本机复用 `.local/postgres` 中的持久数据。相关日志是 `.local/postgres.log`、`.local/ui-app.stdout.log` 和 `.local/ui-app.stderr.log`；PID 文件用于定位，不应直接假定旧 PID 仍对应原进程。重启前核对端口与进程命令。更改生产代码后需重新 build / start；单纯导入题目由数据库驱动的动态页面读取。
+
+日常使用 W7 PowerShell 入口默认打开浏览器；`-NoBrowser`只核对服务，`-Port`明确端口，应用正常停止后`-Build`重建。备份默认`.local/backups/`、导出`.local/exports/`，每次唯一目录，已由`.gitignore`统一忽略；恢复默认只校验，实际`--apply`要求显式另一空库。异常启动锁残留先核对`.local/start.lock`的PID停止状态，再清理锁；详细操作见[W7](docs/JOB_SEEKER_W7_DELIVERY.md)。
 
 ## 验证记录与开发进度
 
@@ -180,14 +192,15 @@ git diff --check
 | 项目状态入口                   | 已完成       | 本文、README 与 AGENTS 入口                                                                                                                                   |
 | 简历专项题                     | 已导入       | 100 题、300 个追问，P0 63 / P1 32 / P2 5；题库总数 670，[整理与导入说明](docs/RESUME_QUESTION_BANK.md)                                                        |
 | 求职者视角产品需求             | 首期已交付   | [需求文档](docs/JOB_SEEKER_REQUIREMENTS.md)；W1 入口/目标、W2 分层、W3 个人卡/自查/卡点、W4 范围正式覆盖已接入，后续按批次实施                                |
-| 求职者训练闭环开发计划         | 部分交付     | [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)；W0–W6 完成，W7–W8 待实施，未承诺工期                                                                         |
+| 求职者训练闭环开发计划         | 主流程已交付 | [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)；W0–W7完成，W8按使用需求评估                                                                                  |
 | W0 数据与兼容契约              | 已提交并迁移 | [W0 交付](docs/JOB_SEEKER_W0_CONTRACT.md)；`3756f01` 已推送，2026-10-10 独立恢复演练后个人库迁移通过                                                          |
 | W1 简历入口、目标与短轮        | 已提交推送   | [W1 交付](docs/JOB_SEEKER_W1_DELIVERY.md)；共享范围、路径推荐、3/5 题、个人库保留与浏览器验收；W1–W3 合并提交 `0e67163`                                       |
 | W2 简历答案分层                | 已提交推送   | [W2 交付](docs/JOB_SEEKER_W2_DELIVERY.md)；100 题同源结构、共用展示与失配回退，43/28 回归、14 项交互；`0e67163`                                               |
 | W3 个人卡、自查、卡点补练      | 已提交推送   | [W3 交付](docs/JOB_SEEKER_W3_DELIVERY.md)；版本合并、观察幂等归属、历史快照、解决重开与固定队列，46/40 回归、15 项交互；`0e67163`                             |
 | W4 范围正式覆盖与首期验收      | 已提交推送   | [W4 交付](docs/JOB_SEEKER_W4_DELIVERY.md)；目标/自选范围、正式覆盖、未练分页、卡片/证据/卡点计数，48/49 回归、13 项交互、16 项个人只读检查；`464218d`         |
 | W5 项目模拟与连续追问          | 已提交推送   | [W5 交付](docs/JOB_SEEKER_W5_DELIVERY.md)；五节点快照、独立记录/恢复、隐藏未来内容、并发/重试、总结/补练，52/60 回归、13 项交互、16 项个人只读检查；`1bbeb7b` |
-| W6 真实复盘与关联补练          | 已交付并迁移 | [W6 交付](docs/JOB_SEEKER_W6_DELIVERY.md)；独立原话与关联基线、幂等/冲突、固定补练及 R07，56/73 回归、16 项交互、27 项个人只读检查；本批次按约定提交推送      |
+| W6 真实复盘与关联补练          | 已提交推送   | [W6交付](docs/JOB_SEEKER_W6_DELIVERY.md)；独立原话/关联基线、幂等/冲突、固定补练/R07，56/73回归、16项交互、27项个人只读；`a5fa217`                            |
+| W7 本地启动与备份恢复          | 已交付       | [W7交付](docs/JOB_SEEKER_W7_DELIVERY.md)；58/84回归、个人完整包公开CLI独立恢复、实际冷启动/复用、14项个人HTTP；本批次按约定提交推送                           |
 | 答案长度与清晰度               | 已修订并导入 | 2026-10-10 [交付报告](docs/ANSWER_QUALITY_REVISION.md)、[670 题修订明细](docs/ANSWER_QUALITY_REVISION_DETAILS.json)；篇幅粗筛通过，保留个人数据               |
 
 2026-10-08 的交付记录报告：28 项单元测试、16 项数据库集成测试通过，ESLint、TypeScript、生产构建通过；Chrome + Playwright 39 项检查通过，意外浏览器错误为 0。这些是上次交付的历史结果，本次开始时未重新运行，不能替代后续改动验证。
@@ -258,9 +271,17 @@ W6 先备份十三表完整 Schema/记录/四序列，在独立库实际恢复�
 
 W6 最终应用 3000（本次 PID 13520）、持久 PostgreSQL 5432（核实 PID 22016）运行，stderr 为空。27 项个人只读 HTTP/服务端检查通过，涵盖原入口、模拟、复盘列表/新建/分页/非法页码、无效/不存在详情与 API、轻量搜索和范围复盘统计。流式 notFound 页同时核对文案，API 400/404。重启/读取前后十六表全字段与四序列相同：1 用户、670 启用题、13 进度、14 事件，五张首期业务表、三张模拟表和三张复盘表为空，迁移版本3条、无默认目标；正式覆盖仍13/670、简历0/100，复盘关联/已练/待练均0。未执行个人seed、db:push或验收写入。
 
+2026-10-12（北京时间）W7 新验证：58/58单元、84/84独立PostgreSQL集成、TypeScript、ESLint、PowerShell语法及Next.js16.3.6生产构建通过。新增2单元/11集成，覆盖pnpm原生程序定位、应用健康/数据库匹配、升级与新建Schema、全部个人表数据/中文/null/微秒/四序列、SQL与公开CLI空库恢复/严格比对、现有库拒绝/损坏包/失败回滚、唯一目录/导出围栏/离线检查/显式目标、并发写入、服务复用/端口/锁/构建与启动失败。全量通过后最终启动代码又通过11项专项回归，不重复无关检查。日志在`D:/CodexHome/visualizations/2026/10/12/agent-interview-w7/`。
+
+W7一次全量测试暴露embedded-postgres在stop内部先无重试删目录，绕过helper的重试造成EBUSY；改为由helper统一负责停止后目录清理，最终84项通过，遗留目录也已核对停止后删除。只影响独立测试库，不改个人数据。实际冷启动发现pnpm符号链接路径定位原生程序失败，已按真实依赖路径解析并加回归，最终持久库正常启动。
+
+W7个人库已生成完整版本包`.local/backups/job-seeker-w7-20261012/backup-2026-10-12T07-41-10-042Z-SaeS3W/`，公开restore CLI在独立空库实际恢复，规范化Schema/十六表全部字段/四序列严格相同，原库不变；包包含manifest/snapshot/restore.sql、公开恢复核对、`personal-rehearsal.json`与`runtime-verification.json`。可读JSON/Markdown在`.local/exports/job-seeker-w7-20261012/export-GKX0f2/`，不能作恢复包。完整包覆盖备份时已保存资料，后续新资料重新运行公开backup，不覆盖旧目录。
+
+W7实际正常停止应用与持久库后，PowerShell入口冷启动原`.local/postgres`与新构建，重复执行直接复用；错误凭证明确拒绝、不多启服务。应用3000（本次PID23356），PostgreSQL5432（PID19532），stderr为空。14项个人HTTP/健康检查通过；启动/读取前后规范化Schema、十六表全字段、四序列与完整包相同，1用户/670启用题/13进度/14事件、三条迁移、新业务表空、无目标。未执行个人seed、迁移、db:push或验收写入。本批无新增交互页面，未重跑浏览器；W6交互保留原日期和范围。
+
 ## 后续事项与已知限制
 
-W4 收尾（2026-10-11）：源码和文档格式、8 份文档 87 个本地链接、Git 差异检查通过，已提交推送 `464218d`。W5 收尾（2026-10-12）：格式、8 份文档 106 个本地链接检查通过，无用临时脚本、失败截图与重复日志已清理，已提交推送 `1bbeb7b`；成功证据和个人可恢复备份保留。W6 收尾（2026-10-12）：源码和文档格式、8 份文档 116 个本地链接、当前状态与证据及 Git 差异检查通过，结果在 W6 证据目录 `document-verification.json`；无用验收/备份/验证脚本已清理，成功证据与可恢复备份保留。本批次按约定提交推送，最新 SHA 以 Git 为准。
+W4 收尾（2026-10-11）：源码和文档格式、8份文档87个本地链接、Git差异检查通过，已推送`464218d`。W5 收尾（2026-10-12）：格式、8份文档106个本地链接通过，无用脚本/失败截图/重复日志清理，已推送`1bbeb7b`。W6 收尾（2026-10-12）：源码/文档格式、8份文档116个本地链接、证据与差异检查通过，临时脚本清理，已推送`a5fa217`。W7 收尾（2026-10-12）：本批源码/文档格式、7份文档126个本地链接、证据与Git差异检查通过，两个临时核对脚本已清理，最终健康API返回ready与十六表。成功日志、核对JSON、个人完整恢复包与可读导出保留；W7本批次按约定提交推送，最新SHA以Git为准。
 
 W6 一次失败测试遗留的独立 PostgreSQL 临时目录已在核对绝对路径与停止状态后清理。后续 helper 增加文件释放重试，新测试目录正常清理；验收与备份脚本也已删除，个人库与成功证据保留。
 
@@ -268,9 +289,9 @@ W6 一次失败测试遗留的独立 PostgreSQL 临时目录已在核对绝对�
 
 可从 [简历题库](http://localhost:3000/questions?preset=resume_focus)、[简历 P0 短轮](http://localhost:3000/practice/session?preset=resume_focus&resumePriority=P0&mode=daily&size=5) 或 [训练目标](http://localhost:3000/learning-target) 开始，按实际答题情况补充本人例子和证据。题目依据指定简历；W1 没有重新验证 VendorGuard 或实习代码，参考设计不扩大为本人履历。
 
-后续按 [求职者需求分析](docs/JOB_SEEKER_REQUIREMENTS.md) 和批次计划继续：W0–W4 首期验收、W5 固定模拟及 W6 真实复盘/关联补练已完成。统一启动备份待 W7，JD/AI/语音待实际需求再评估。
+后续按[求职者需求](docs/JOB_SEEKER_REQUIREMENTS.md)和批次计划继续：W0–W7已交付，日常学习/模拟/复盘与本地启动备份均可用；JD/AI/语音只有连续使用暴露真实需求后才进入W8评估。
 
-下一批次是 W7：统一 Windows PowerShell 启动，复用持久 PostgreSQL/已有应用；完整备份覆盖十六表和四序列、迁移/Schema/版本清单，并实际独立恢复核对；另提供可读 JSON/Markdown 导出，明确浏览器未保存草稿的边界。W7 尚未开始。固定队列、正式提交、个人资料、模拟/复盘与统计契约以源码、[W0](docs/JOB_SEEKER_W0_CONTRACT.md)、[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 和 [W6](docs/JOB_SEEKER_W6_DELIVERY.md) 为准。
+W8尚未进入，先按本人实际使用记录区分JD选题、反馈与语音成本，再选一个最小方向；不自动引入模型或评分。固定队列/正式提交/个人资料/模拟复盘/统计与备份契约以源码、[W0](docs/JOB_SEEKER_W0_CONTRACT.md)、[W5](docs/JOB_SEEKER_W5_DELIVERY.md)、[W6](docs/JOB_SEEKER_W6_DELIVERY.md)和[W7](docs/JOB_SEEKER_W7_DELIVERY.md)为准。
 
 现有局限：所有访问者共享 `default` 用户；普通草稿/续练入口、模拟和复盘未保存编辑依赖当前浏览器存储，已保存模拟/复盘可从服务端列表恢复；模拟列表显示最近 20 轮，旧记录可用轮次 URL 读取，复盘每页 10 条。复盘最多 20 问，已保存问题暂不支持删除/重排。核心路径固定；普通新增题不会自动成为核心新题；应用需本地 PostgreSQL。历史浏览器验收覆盖 Chrome 桌面与模拟手机，未验证 Safari、Firefox 或实体手机。
 
@@ -283,7 +304,7 @@ W6 一次失败测试遗留的独立 PostgreSQL 临时目录已在核对绝对�
 
 - [简历题库整理与导入](docs/RESUME_QUESTION_BANK.md)：2026-10-09 的内容范围、练习入口、能力边界及个人数据保留验证。
 - [求职者视角产品需求](docs/JOB_SEEKER_REQUIREMENTS.md)：2026-10-09 的现状分析、10 项需求与验收条件；当前交付状态见本文和开发计划。
-- [求职者训练闭环开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)：W0–W6 完成，W7–W8 待实施。
+- [求职者训练闭环开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)：W0–W7完成，W8按实际使用需求评估。
 - [W0 数据与兼容契约](docs/JOB_SEEKER_W0_CONTRACT.md)：实际字段、请求 / 并发、范围 / 统计、兼容与升级步骤。
 - [W1 简历入口、目标与短轮](docs/JOB_SEEKER_W1_DELIVERY.md)：2026-10-10 的实现、个人库迁移、41/28 回归、21 项交互、19 项只读检查与截图。
 - [W2 简历答案分层](docs/JOB_SEEKER_W2_DELIVERY.md)：2026-10-11 的共用结构与折叠、Markdown 回退、43/28 回归、14 项交互、9 项只读检查和个人记录保留。
@@ -291,6 +312,7 @@ W6 一次失败测试遗留的独立 PostgreSQL 临时目录已在核对绝对�
 - [W4 范围正式覆盖与首期验收](docs/JOB_SEEKER_W4_DELIVERY.md)：2026-10-11 的一致快照统计、未练分页与固定队列、48/49 回归、13 项交互与 16 项个人只读检查。
 - [W5 项目模拟与连续追问](docs/JOB_SEEKER_W5_DELIVERY.md)：2026-10-12 的五节点快照、独立保存恢复、隐藏未来内容、结束总结、十表恢复/十三表升级、52/60 回归、13 项交互与 16 项个人只读检查。
 - [W6 真实复盘与关联补练](docs/JOB_SEEKER_W6_DELIVERY.md)：2026-10-12 的独立原话/个人字段、关联快照/正式补练、幂等/冲突恢复、R07、十三表恢复/十六表升级、56/73 回归、16 项交互与 27 项个人只读检查。
+- [W7 Windows启动与备份恢复](docs/JOB_SEEKER_W7_DELIVERY.md)：2026-10-12的PowerShell入口、版本包/显式空库恢复、独立可读导出、58/84回归、真实冷启动/复用与14项个人HTTP。
 - [领域词汇](CONTEXT.md)：目标、正式完成、个人卡、作答观察、卡点、正式覆盖、项目模拟和真实复盘补练的定义。
 - [答案质量检查](docs/ANSWER_QUALITY_AUDIT.md)：2026-10-09 的长度口径、表述问题、重复范围和修订示例；[逐题明细](docs/ANSWER_QUALITY_AUDIT_DETAILS.json)。
 - [答案质量修订交付](docs/ANSWER_QUALITY_REVISION.md)：2026-10-10 的全量修订、导入保留、备份恢复与 15 项 HTTP 检查；[修订后明细](docs/ANSWER_QUALITY_REVISION_DETAILS.json)。

@@ -6,6 +6,14 @@
 
 ## 本地启动
 
+本机已有数据库与项目依赖时，Windows 日常启动直接运行：
+
+```powershell
+pwsh -NoProfile -File scripts/start-local.ps1
+```
+
+自动复用健康服务，或启动已有 `.local/postgres` 和生产应用；缺少生产构建时先构建。`-NoBrowser` 不打开页面，`-Port 3001` 选择应用端口，停止本项目应用后用 `-Build` 更新构建。启动不会导入、迁移或重置个人数据；端口冲突明确报错。[W7 使用、恢复与故障说明](docs/JOB_SEEKER_W7_DELIVERY.md)。
+
 需要 Node.js 20.9+、pnpm 和 PostgreSQL。下面使用 Docker 启动数据库；已有本地 PostgreSQL 时可直接配置连接。项目默认连接本机 5432 端口。
 
 ```bash
@@ -17,7 +25,7 @@ pnpm db:seed
 pnpm dev
 ```
 
-打开 `http://localhost:3000`。若 3000 端口已占用，Next.js 会使用下一个可用端口。
+打开 `http://localhost:3000`。上述 `pnpm dev` 在端口占用时使用下一个可用端口；W7 启动入口使用明确指定端口，冲突时显示原因。
 
 `DATABASE_URL` 是唯一必需的环境变量，格式为 `postgres://用户:密码@主机:端口/数据库`。默认示例适用于 `compose.yaml`。修改数据库连接信息时同步更新 `.env` 与 Compose 配置。
 
@@ -51,6 +59,7 @@ pnpm dev
 - 自评区提供不会、模糊、掌握的独立回答标准；仅选择自评不计次数，口头或空白文字作答仍可完成。
 - Python、后端和数据库题目围绕 AI 应用所需的服务端能力；题库不含前端分类。LLM 分类聚焦 token、上下文、模型选型、输出控制与评估，不考注意力公式、MoE、LoRA 训练等算法细节。
 - 系统主题默认、手动明暗主题切换；移动端单列布局。
+- Windows 日常启动、十六表实际 Schema / 全字段 / 序列完整备份、向独立空库恢复核对及 JSON / Markdown 可读导出。支持服务复用、端口 / 连接 / 构建 / 启动错误提示，不覆盖现有数据库；未保存浏览器草稿不在服务端备份中。[W7 交付与验证](docs/JOB_SEEKER_W7_DELIVERY.md)。
 
 ## 数据模型
 
@@ -80,6 +89,22 @@ W0 已定义五张首期业务表和迁移版本表，W1 接入目标，W3 接�
 
 ## 常用命令
 
+日常启动与资料保存：
+
+```powershell
+pnpm local:start
+pnpm local:backup
+pnpm local:restore --from <备份目录>
+pnpm local:export
+# wrapper 不可用时：
+pwsh -NoProfile -File scripts/start-local.ps1
+node --import tsx scripts/local-data.ts backup
+node --import tsx scripts/local-data.ts restore --from <备份目录>
+node --import tsx scripts/local-data.ts export
+```
+
+备份默认写 `.local/backups/`，可读文件写 `.local/exports/`，每次创建新目录，均已忽略进入 Git。恢复默认只离线校验；实际恢复需明确 `RESTORE_DATABASE_URL` 指向另一空库并加 `--apply`，不会自动切换应用连接。完整包包含 Schema 与序列；可读导出不含这些信息，不能作为完整恢复备份。实际步骤见 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)。
+
 W0 迁移说明：`pnpm db:migrate:w0`。旧四表库使用 `--apply` 前先完成契约文档中的恢复演练；本机个人库已在 W1 完成该步骤，新空库继续用 `db:push`。不能改写已应用迁移文件。
 
 W5 迁移说明：`pnpm db:migrate:w5`。已受控升级 W0 的旧库先备份、在独立库恢复并比对，再运行 `pnpm db:migrate:w5 --apply`；无参数不连接数据库。2026-10-12 本机个人库已完成，详见 [W5 恢复与迁移记录](docs/JOB_SEEKER_W5_DELIVERY.md)。
@@ -101,7 +126,7 @@ pnpm db:seed
 
 ## 后续方向
 
-求职训练 [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md) 已完成 W0–W6：首期学习闭环、两项目固定模拟面试与追问、真实面试复盘与关联补练。2026-10-12 W6 通过 56 项单元、73 项集成、静态与生产构建、16 项浏览器交互及 27 项个人只读检查，十六表全记录与序列保留；证据见 [W6 交付](docs/JOB_SEEKER_W6_DELIVERY.md)。下一批次是 W7 统一启动、备份恢复与导出，本轮尚未开始。
+求职训练 [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md) 已完成 W0–W7：首期学习闭环、项目模拟、真实复盘，以及 Windows 启动、完整备份恢复与可读导出。2026-10-12 W7 通过 58 项单元、84 项集成、静态与生产构建、个人库公开 CLI 独立恢复、真实冷启动 / 重复复用和 14 项个人 HTTP 检查，十六表全字段与四序列保留；证据见 [W7 交付](docs/JOB_SEEKER_W7_DELIVERY.md)。W8 仅按连续使用暴露的需求评估 JD / AI / 语音，本轮未进入。
 
 2026-10-09 [答案质量检查](docs/ANSWER_QUALITY_AUDIT.md)发现短答篇幅不足、模板重复和例子偏题；2026-10-10 已完成 [670 题修订与导入](docs/ANSWER_QUALITY_REVISION.md)。后续按实际练习朗读调整，并补本人证据；全文 Markdown 长度和自动字符检查不能代替讲解质量或真实口头表达验收。
 
