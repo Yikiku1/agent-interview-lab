@@ -1,6 +1,6 @@
 # 面试训练台：项目状态与开发交接
 
-最后更新：2026-10-11（北京时间）。工作目录：`D:\projects\agent-interview-lab`。
+最后更新：2026-10-12（北京时间）。工作目录：`D:\projects\agent-interview-lab`。
 
 本文是持续维护的项目状态入口。接手开发、排查问题或整理题库时先读本文，再读涉及模块。源码、实际探针和检查结果决定当前事实；历史交付记录用于追溯，计划不等于已实现。
 
@@ -8,18 +8,18 @@
 
 ## 当前结论
 
-项目已具备个人面试学习闭环：找题、分轮作答、自评、保存历史、恢复续练、到期复习和今日推荐。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交并推送。[W1](docs/JOB_SEEKER_W1_DELIVERY.md)完成简历入口、共享范围、训练目标、路径推荐与 3/5 题；2026-10-11 [W2](docs/JOB_SEEKER_W2_DELIVERY.md)完成 100 道简历题共用答案分层，[W3](docs/JOB_SEEKER_W3_DELIVERY.md)完成个人回答卡、要点自查、卡点与定向补练，W1–W3 已在 `0e67163` 提交推送并核对远端。[W4](docs/JOB_SEEKER_W4_DELIVERY.md)完成目标范围正式覆盖、未练分页/短轮、个人卡/证据/卡点计数与首期端到端验收。新构建运行于 3000，个人十表全记录与序列保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W5–W8 待实施。短答起草范围检查通过，未做真人计时。
+项目已具备个人面试学习闭环与固定项目模拟。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖与首期验收已在 `464218d` 提交推送。2026-10-12 [W5](docs/JOB_SEEKER_W5_DELIVERY.md)完成两项目五节点模拟、连续追问、独立保存恢复及结束后参考/补练。个人库经独立恢复演练升级到十三表，新构建运行于 3000，原记录与四个序列保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W6–W8 待实施。短答起草范围检查通过，未做真人计时。
 
 本项目用于训练 Agent / LLM 应用开发面试；当前应用本身没有接入模型、自动评卷或 Agent 执行服务。使用固定 `default` 用户，个人本地使用，尚未实现登录和跨设备草稿同步。
 
-| 项目     | 本次核实状态                                                                                                                |
-| -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Git 基线 | `main`，2026-10-11 W1–W3 已以 `0e67163` 提交推送并核对远端；W4 本批次验证后按用户约定提交推送，最新 SHA 以 Git 为准         |
-| 题库     | 源码和个人 PostgreSQL 均为 670 道启用题，7 个分类；原 570 题加 100 道简历专项题，保留 70 道基础题和 30 道精修核心题         |
-| 实际数据 | 2026-10-11 W4 重启/只读检查前后：1 用户、670 启用题、13 进度、14 事件；十表全字段与四个序列保留，五张业务表为空，未配置目标 |
-| 数据库   | 个人库 `interview_practice`，`127.0.0.1:5432`，持久目录 `.local/postgres`；只核实地址与数据库名，不记录凭证                 |
-| 应用     | 2026-10-11 W4 新生产构建运行于 3000（PID 41588），16 项个人应用只读检查通过；独立库 Chrome + Playwright 13 项交互通过       |
-| 本次工作 | W4 已交付；范围统计只读、正式覆盖独立计数、未练列表/短轮与首期流程验收；下一批次 W5，尚未开始                               |
+| 项目     | 本次核实状态                                                                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Git 基线 | `main`，W4 已以 `464218d` 提交推送；W5 本批次验证后按用户约定提交推送，最新 SHA 以 Git 为准                                                                |
+| 题库     | 源码和个人 PostgreSQL 均为 670 道启用题，7 个分类；原 570 题加 100 道简历专项题，保留 70 道基础题和 30 道精修核心题                                        |
+| 实际数据 | 2026-10-12 W5 升级/只读检查：1 用户、670 启用题、13 进度、14 事件；十三表全字段与四个序列保留，五张首期业务表及三张模拟表为空，迁移版本 2 条，未配置目标   |
+| 数据库   | 个人库 `interview_practice`，`127.0.0.1:5432`，持久目录 `.local/postgres`；只核实地址与数据库名，不记录凭证                                                |
+| 应用     | 2026-10-12 W5 最终生产构建运行于 3000（PID 13128），16 项个人只读检查通过；PostgreSQL 5432（本次核实 PID 22016）；独立库 Chrome + Playwright 13 项交互通过 |
+| 本次工作 | W5 已交付；两项目固定模拟、独立节点记录、恢复、隐藏未来内容、结束总结与正式补练；下一批次 W6，尚未开始                                                     |
 
 ## 功能与产品约定
 
@@ -36,6 +36,7 @@
 | 要点与卡点 | 本人自查与五类卡点可独立保存或关联正式回答；草稿跨切题/收起/刷新恢复，正式待确认时先保留；历史要点保存原文本快照                                              |
 | 定向补练   | 卡点按共享范围、类型和解决状态筛选，支持明确解决/重开；最早记录顺序按题去重形成 3/5 题固定队列，停用资料仍可读                                                |
 | 范围进度   | 统计页默认当前目标，无目标时全部启用题；只读自选范围，正式覆盖按独立 practice 题计，未练每页 12 题并提供本页 3/5 固定队列；自评、卡片、证据填写和卡点分别计数 |
+| 项目模拟   | VendorGuard / 发票实习固定职责、主问题和三个追问；独立回答/跳过/卡点/可选计时，暂停续答，结束后统一快照参考与补练，不写普通完成；已结束轮次不能重开           |
 | 自评与完成 | 仅修改不会 / 模糊 / 掌握不算练习；“完成本题”保存回答和自评，增加次数并安排复习。口头或空白文字也可完成                                                        |
 | 分轮与续练 | URL 保存本轮 ID、固定队列、当前题目与总结状态；刷新和继续保留顺序。停用题跳过，新一轮重新选题                                                                 |
 | 回答草稿   | 按本轮与题目保存在当前浏览器；切题、返回、刷新可恢复，完成后的新一轮不复用旧回答                                                                              |
@@ -50,41 +51,43 @@
 
 技术栈是 Next.js 16.3.6 App Router、React 19、TypeScript strict、Tailwind 4、Drizzle ORM、PostgreSQL。版本与命令以 `package.json` 和锁文件为准。Server Components 读取数据；API Route 处理状态修改与正式提交。
 
-| 入口                                                                                                                       | 职责                                                                             |
-| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `src/app/page.tsx`                                                                                                         | 首页统计、推荐入口和继续练习                                                     |
-| `src/app/questions/`                                                                                                       | 题库与详情；`src/app/practice/`、`review/`、`stats/` 分别提供练习、复习和统计    |
-| `src/lib/questions.ts`                                                                                                     | 题目筛选、选题、统计与历史查询；只返回启用题                                     |
-| `src/lib/question-filters.ts`、`learning-options.ts`                                                                       | 共享条件解析、轻量范围标签与 URL 序列化                                          |
-| `src/lib/learning-target.ts`、`src/app/api/learning-target/route.ts`、`src/app/learning-target/`                           | 目标只读查询、事务保存与配置页                                                   |
-| `src/lib/daily-practice.ts`、`daily-practice-query.ts`                                                                     | 推荐纯逻辑与数据库取候选；统一请求时间与北京时间日界线                           |
-| `src/lib/practice-session.ts`                                                                                              | 模式、固定队列、位置、续练 URL 与总结                                            |
-| `src/lib/practice-draft.ts`                                                                                                | 草稿、提交 ID、异常和恢复契约                                                    |
-| `src/lib/review-schedule.ts`                                                                                               | 复习间隔、连续掌握阶段与日期展示                                                 |
-| `src/components/practice/`                                                                                                 | 作答、自评、保存、轮次总结与交互恢复                                             |
-| `src/components/question/`                                                                                                 | 列表、筛选、掌握状态、普通 Markdown 与核心分层答案                               |
-| `src/app/api/progress/route.ts`                                                                                            | `PUT /api/progress`，只更新掌握状态                                              |
-| `src/app/api/attempts/route.ts`                                                                                            | `POST /api/attempts`，事务内写正式事件、次数与复习安排                           |
-| `src/db/schema.ts`                                                                                                         | 数据结构；`config.ts` 统一环境加载；`index.ts` 为网页数据库连接                  |
-| `src/lib/learning-contract.ts`                                                                                             | 预设、范围元数据与严格请求校验；W1 目标、W3 个人卡和观察共用                     |
-| `src/lib/practice-notes.ts`、`practice-notes-contract.ts`、`note-draft.ts`                                                 | W3 个人卡版本、观察事务/幂等、卡点范围与状态、未保存编辑恢复                     |
-| `src/lib/scope-progress.ts`、`scope-progress-contract.ts`、`src/components/practice/scope-progress-panel.tsx`              | W4 只读一致快照统计、严格范围/分页条件与标签、未练固定队列与卡点入口             |
-| `src/app/practice-gaps/`、`questions/[id]/answer-card/`、`questions/[id]/history/[eventId]/`                               | 卡点筛选补练、个人卡编辑、逐次正式回答与自查                                     |
-| `scripts/audit-answer-quality.ts`                                                                                          | 全量答案字符、口头时长粗筛、重复段落及可选数据库只读比对；不自动评分、不修改答案 |
-| `src/db/answer-quality.ts`                                                                                                 | 短答计数与起草范围、有效讲解和示例校验；由 seed 与审查脚本共用                   |
-| `src/db/migrate-learning-foundation.ts`、`migrate-learning-foundation-cli.ts`、`migrations/0001_job_seeker_foundation.sql` | W0 事务增量迁移、版本 checksum 与默认只显示说明的 CLI；2026-10-10 已迁移个人库   |
-| `src/db/seed-data.ts`、`seed-bank.ts`、`seed.ts`                                                                           | 汇总题目、导入校验与事务、CLI 入口                                               |
-| `src/db/basic-questions.ts`                                                                                                | 70 道基础题                                                                      |
-| `src/db/core-path.ts`、`core-answers.ts`、`learning-content.ts`                                                            | 核心题轻量身份顺序、内容、Markdown 生成；保持单一内容来源                        |
-| `src/db/resume-content.ts`、`resume-questions.ts`、`src/components/question/resume-learning-answer.tsx`                    | 简历结构化答案、种子生成、服务端身份/版本核对与共用分层展示                      |
-| `src/db/expansion-*.ts`、`seed-notes.ts`、`seed-context.ts`、`original-examples.ts`                                        | 岗位场景、逐题机制与示例、明确标为补充的共享背景；旧 `answer-examples.ts` 已移除 |
-| `tests/unit/`、`tests/integration/`、`tests/helpers/postgres.ts`                                                           | 纯逻辑回归、真实数据库契约与独立临时数据库                                       |
+| 入口                                                                                                                                          | 职责                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `src/app/page.tsx`                                                                                                                            | 首页统计、推荐入口和继续练习                                                              |
+| `src/app/questions/`                                                                                                                          | 题库与详情；`src/app/practice/`、`review/`、`stats/` 分别提供练习、复习和统计             |
+| `src/lib/questions.ts`                                                                                                                        | 题目筛选、选题、统计与历史查询；只返回启用题                                              |
+| `src/lib/question-filters.ts`、`learning-options.ts`                                                                                          | 共享条件解析、轻量范围标签与 URL 序列化                                                   |
+| `src/lib/learning-target.ts`、`src/app/api/learning-target/route.ts`、`src/app/learning-target/`                                              | 目标只读查询、事务保存与配置页                                                            |
+| `src/lib/daily-practice.ts`、`daily-practice-query.ts`                                                                                        | 推荐纯逻辑与数据库取候选；统一请求时间与北京时间日界线                                    |
+| `src/lib/practice-session.ts`                                                                                                                 | 模式、固定队列、位置、续练 URL 与总结                                                     |
+| `src/lib/practice-draft.ts`                                                                                                                   | 草稿、提交 ID、异常和恢复契约                                                             |
+| `src/lib/review-schedule.ts`                                                                                                                  | 复习间隔、连续掌握阶段与日期展示                                                          |
+| `src/components/practice/`                                                                                                                    | 作答、自评、保存、轮次总结与交互恢复                                                      |
+| `src/components/question/`                                                                                                                    | 列表、筛选、掌握状态、普通 Markdown 与核心分层答案                                        |
+| `src/app/api/progress/route.ts`                                                                                                               | `PUT /api/progress`，只更新掌握状态                                                       |
+| `src/app/api/attempts/route.ts`                                                                                                               | `POST /api/attempts`，事务内写正式事件、次数与复习安排                                    |
+| `src/db/schema.ts`                                                                                                                            | 数据结构；`config.ts` 统一环境加载；`index.ts` 为网页数据库连接                           |
+| `src/lib/learning-contract.ts`                                                                                                                | 预设、范围元数据与严格请求校验；W1 目标、W3 个人卡和观察共用                              |
+| `src/lib/practice-notes.ts`、`practice-notes-contract.ts`、`note-draft.ts`                                                                    | W3 个人卡版本、观察事务/幂等、卡点范围与状态、未保存编辑恢复                              |
+| `src/lib/scope-progress.ts`、`scope-progress-contract.ts`、`src/components/practice/scope-progress-panel.tsx`                                 | W4 只读一致快照统计、严格范围/分页条件与标签、未练固定队列与卡点入口                      |
+| `src/lib/mock-interview.ts`、`mock-interview-contract.ts`、`src/components/mock/`、`src/app/mock-interviews/`、`src/app/api/mock-interviews/` | W5 固定五节点快照、只发送当前/过去节点、创建幂等与修改版本/行锁、独立草稿、续答和结束总结 |
+| `src/db/migrate-mock-interview.ts`、`migrate-mock-interview-cli.ts`、`migrations/0002_mock_interview.sql`                                     | W5 三表增量迁移，要求 W0 checksum 一致；2026-10-12 恢复演练后迁移个人库，SQL 已冻结       |
+| `src/app/practice-gaps/`、`questions/[id]/answer-card/`、`questions/[id]/history/[eventId]/`                                                  | 卡点筛选补练、个人卡编辑、逐次正式回答与自查                                              |
+| `scripts/audit-answer-quality.ts`                                                                                                             | 全量答案字符、口头时长粗筛、重复段落及可选数据库只读比对；不自动评分、不修改答案          |
+| `src/db/answer-quality.ts`                                                                                                                    | 短答计数与起草范围、有效讲解和示例校验；由 seed 与审查脚本共用                            |
+| `src/db/migrate-learning-foundation.ts`、`migrate-learning-foundation-cli.ts`、`migrations/0001_job_seeker_foundation.sql`                    | W0 事务增量迁移、版本 checksum 与默认只显示说明的 CLI；2026-10-10 已迁移个人库            |
+| `src/db/seed-data.ts`、`seed-bank.ts`、`seed.ts`                                                                                              | 汇总题目、导入校验与事务、CLI 入口                                                        |
+| `src/db/basic-questions.ts`                                                                                                                   | 70 道基础题                                                                               |
+| `src/db/core-path.ts`、`core-answers.ts`、`learning-content.ts`                                                                               | 核心题轻量身份顺序、内容、Markdown 生成；保持单一内容来源                                 |
+| `src/db/resume-content.ts`、`resume-questions.ts`、`src/components/question/resume-learning-answer.tsx`                                       | 简历结构化答案、种子生成、服务端身份/版本核对与共用分层展示                               |
+| `src/db/expansion-*.ts`、`seed-notes.ts`、`seed-context.ts`、`original-examples.ts`                                                           | 岗位场景、逐题机制与示例、明确标为补充的共享背景；旧 `answer-examples.ts` 已移除          |
+| `tests/unit/`、`tests/integration/`、`tests/helpers/postgres.ts`                                                                              | 纯逻辑回归、真实数据库契约与独立临时数据库                                                |
 
 简历题入口：`src/db/resume-questions.ts` 汇总，`resume-content.ts` 管理来源与结构，`resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts` 保存具体内容；[整理与导入说明](docs/RESUME_QUESTION_BANK.md)。
 
 ## 数据与不能破坏的契约
 
-当前个人数据库有十张表：原 `users`、`questions`、`user_question_progress`、`review_events`，五张首期业务表 `learning_targets`、`personal_answer_cards`、`practice_observations`、`answer_point_checks`、`practice_gaps`，以及 `app_schema_migrations`。2026-10-10 独立恢复与迁移演练后已升级个人库，四表全记录与原序列保留；五张业务表尚为空，没有自动保存目标。具体字段和请求契约见 [W0 契约](docs/JOB_SEEKER_W0_CONTRACT.md)。
+当前个人数据库有十三张表：原 `users`、`questions`、`user_question_progress`、`review_events`，五张首期业务表 `learning_targets`、`personal_answer_cards`、`practice_observations`、`answer_point_checks`、`practice_gaps`，`app_schema_migrations`，以及 W5 的 `mock_rounds`、`mock_nodes`、`mock_round_actions`。2026-10-10 W0、2026-10-12 W5 均在独立恢复与迁移演练后受控升级个人库，原记录与四个序列保留；五张首期业务表和三张模拟表均空，没有默认目标。字段和请求契约见 [W0](docs/JOB_SEEKER_W0_CONTRACT.md) 与 [W5](docs/JOB_SEEKER_W5_DELIVERY.md)。
 
 - 题干是种子更新的唯一键；按题干 upsert 保留题目 ID。改已有题干会产生另一道题，涉及身份变更时单独设计迁移。
 - 答案导入前检查普通短答 120–180、简历短答 240–270 个有效字符，并要求有效讲解与具体示例；这是按既有时长目标的起草范围，不是实际朗读认证。标题、标点、URL 与代码块不计入有效短答字数。
@@ -101,8 +104,12 @@
 - 已保存个人卡和自查从数据库读取；localStorage 只保存未保存编辑。正式完成待确认时，练习和总结均保留自查草稿，恢复真实事件后再关联。配额失败仅承诺当前页面保留最新编辑。
 - 停用题不出现在题库/补练/统计中，但 W3 详情、卡片、卡点与逐次历史允许访问保留资料。
 - W4 目标、范围、计数和未练列表共用只读 repeatable read 快照；正式事件 EXISTS，卡片/卡点独立聚合。证据按 trim 非空计算，不能据此断定已验证；通用核心统计全部启用题，30 题路径只作为核心推荐。`scope=custom` 只覆盖查看范围，单独 `page` 保持当前目标。
+- W5 开始时冻结主问题、三个追问、参考和基础建议；进行中 DTO 只发送当前及过去节点，未来追问题干和参考/建议直到结束才发送。源题停用或改文不改旧轮次，失配来源不能新建。
+- W5 创建 requestId 按用户幂等；修改锁轮次、匹配 revision/当前位置、持久记录请求，同内容迟到重试不重复推进，409 返回当前轮次供本人核对。节点与请求事务写入；模拟不写普通事件、W3 长期卡点或复习安排。
+- W5 已保存节点由服务端恢复，未保存草稿按轮次/位置隔离；另一页面 storage 事件不覆盖当前编辑。可空文字明确记为口头已答；提前结束保留未答草稿且结束后不能重开；可选计时只累计页面可见秒数，刷新暂停。
 - 目标 PUT 在事务内锁用户，requestId 同配置返回原记录，不同配置 409；旧 inactive 请求重试不重激活，写失败回滚。目标改变只影响新选题，不改已开始的 queue。
 - 原四表库升级 W0 使用版本化增量迁移，不能用 `db:push` 绕过记录；新空库继续用 `db:push` 建完整 Schema。导入模块和默认迁移命令都不执行迁移，W1 启用前按契约完成备份恢复演练。
+- 已受控升级 W0 的旧库通过 `db:migrate:w5 --apply` 追加模拟三表，先备份并实际独立恢复比对；无参数不连接数据库。W0/W5 迁移文件均已应用，不能改写或用 `db:push` 接管个人库。
 
 ## 开发习惯与完成方式
 
@@ -110,7 +117,7 @@
 
 1. 开始时检查 Git 与真实运行状态，读本文及相关模块。已有个人进度和未提交改动要保留。
 2. 涉及 Next.js 时先读安装版本 `node_modules/next/dist/docs/` 的对应文档，再改实现，特别留意异步参数与缓存约定。
-3. 用户已授权的工作持续推进到可检查结果。2026-10-10 按“提交并推送，然后开始 W1”先推送基线并完成 W1；2026-10-11 按两次“继续”依次完成 W2、W3。2026-10-11 用户新增约定：每批推进完成并验证后提交、推送；本轮先提交推送 W1–W3，再实施 W4 并在验收后提交推送。
+3. 用户已授权的工作持续推进到可检查结果。2026-10-10 按“提交并推送，然后开始 W1”先推送基线并完成 W1；2026-10-11 按“继续”完成 W2/W3，再提交推送 W1–W3 并推进 W4；W4 已在 `464218d` 推送。沿用用户“每次推进完记得提交推送”的约定：每批实现、验证和更新上下文后提交推送，再核对远端；本批次 W5，下一批次 W6。
 4. 使用现有样式变量和组件，保留中文阅读、移动端、主题、键盘操作与错误恢复。内容变更优先复用现有题库机制。
 5. 验证与风险相称：内容和可逆小改动无需为了覆盖实现而新增测试；涉及数据持久化、提交、恢复、推荐或选题时运行对应契约回归。
 6. 数据库集成测试使用独立临时 PostgreSQL，结束时清理，不在个人库造测试记录。个人库导入前保存可恢复备份，之后核实原题 ID、用户、进度和历史。
@@ -135,6 +142,7 @@ pnpm build
 ```powershell
 node --import tsx src/db/seed.ts
 node --import tsx src/db/migrate-learning-foundation-cli.ts
+node --import tsx src/db/migrate-mock-interview-cli.ts
 node --import tsx --test tests/unit/*.test.ts
 node --conditions=react-server --import tsx --test tests/integration/*.test.ts
 node node_modules/eslint/bin/eslint.js
@@ -154,21 +162,22 @@ git diff --check
 
 2026-10-09（北京时间，W0 开发前）：根据需求分析整理 [求职者训练闭环开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)，将 R01–R10 拆为 W0–W8 批次，明确首期范围、建议数据结构、固定队列与 attemptId 契约、验收场景、验证方式和实施前决策门。当时只完成计划文档，未修改页面、接口、Schema 或个人数据；各批次当时待实施，不代表工期承诺。
 
-| 阶段                           | 状态         | 证据                                                                                                                                                             |
-| ------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 初始面试训练平台               | 已提交       | `d723848`（2026-10-04）                                                                                                                                          |
-| 练习可靠性、学习界面与计划     | 已提交       | `8924e3a`（2026-10-08）；具体行为以当前源码为准                                                                                                                  |
-| 今日推荐、分层核心题与自评说明 | 已交付       | `9037f0c`（2026-10-08），[交付记录](docs/LEARNING_EFFICIENCY_DELIVERY.md)                                                                                        |
-| 项目状态入口                   | 已完成       | 本文、README 与 AGENTS 入口                                                                                                                                      |
-| 简历专项题                     | 已导入       | 100 题、300 个追问，P0 63 / P1 32 / P2 5；题库总数 670，[整理与导入说明](docs/RESUME_QUESTION_BANK.md)                                                           |
-| 求职者视角产品需求             | 首期已交付   | [需求文档](docs/JOB_SEEKER_REQUIREMENTS.md)；W1 入口/目标、W2 分层、W3 个人卡/自查/卡点、W4 范围正式覆盖已接入，后续按批次实施                                   |
-| 求职者训练闭环开发计划         | 部分交付     | [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)；W0–W4 完成，W5–W8 待实施，未承诺工期                                                                            |
-| W0 数据与兼容契约              | 已提交并迁移 | [W0 交付](docs/JOB_SEEKER_W0_CONTRACT.md)；`3756f01` 已推送，2026-10-10 独立恢复演练后个人库迁移通过                                                             |
-| W1 简历入口、目标与短轮        | 已提交推送   | [W1 交付](docs/JOB_SEEKER_W1_DELIVERY.md)；共享范围、路径推荐、3/5 题、个人库保留与浏览器验收；W1–W3 合并提交 `0e67163`                                          |
-| W2 简历答案分层                | 已提交推送   | [W2 交付](docs/JOB_SEEKER_W2_DELIVERY.md)；100 题同源结构、共用展示与失配回退，43/28 回归、14 项交互；`0e67163`                                                  |
-| W3 个人卡、自查、卡点补练      | 已提交推送   | [W3 交付](docs/JOB_SEEKER_W3_DELIVERY.md)；版本合并、观察幂等归属、历史快照、解决重开与固定队列，46/40 回归、15 项交互；`0e67163`                                |
-| W4 范围正式覆盖与首期验收      | 已交付       | [W4 交付](docs/JOB_SEEKER_W4_DELIVERY.md)；目标/自选范围、正式覆盖、未练分页、卡片/证据/卡点计数，48/49 回归、13 项交互、16 项个人只读检查；本批次验证后提交推送 |
-| 答案长度与清晰度               | 已修订并导入 | 2026-10-10 [交付报告](docs/ANSWER_QUALITY_REVISION.md)、[670 题修订明细](docs/ANSWER_QUALITY_REVISION_DETAILS.json)；篇幅粗筛通过，保留个人数据                  |
+| 阶段                           | 状态         | 证据                                                                                                                                                                     |
+| ------------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 初始面试训练平台               | 已提交       | `d723848`（2026-10-04）                                                                                                                                                  |
+| 练习可靠性、学习界面与计划     | 已提交       | `8924e3a`（2026-10-08）；具体行为以当前源码为准                                                                                                                          |
+| 今日推荐、分层核心题与自评说明 | 已交付       | `9037f0c`（2026-10-08），[交付记录](docs/LEARNING_EFFICIENCY_DELIVERY.md)                                                                                                |
+| 项目状态入口                   | 已完成       | 本文、README 与 AGENTS 入口                                                                                                                                              |
+| 简历专项题                     | 已导入       | 100 题、300 个追问，P0 63 / P1 32 / P2 5；题库总数 670，[整理与导入说明](docs/RESUME_QUESTION_BANK.md)                                                                   |
+| 求职者视角产品需求             | 首期已交付   | [需求文档](docs/JOB_SEEKER_REQUIREMENTS.md)；W1 入口/目标、W2 分层、W3 个人卡/自查/卡点、W4 范围正式覆盖已接入，后续按批次实施                                           |
+| 求职者训练闭环开发计划         | 部分交付     | [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)；W0–W5 完成，W6–W8 待实施，未承诺工期                                                                                    |
+| W0 数据与兼容契约              | 已提交并迁移 | [W0 交付](docs/JOB_SEEKER_W0_CONTRACT.md)；`3756f01` 已推送，2026-10-10 独立恢复演练后个人库迁移通过                                                                     |
+| W1 简历入口、目标与短轮        | 已提交推送   | [W1 交付](docs/JOB_SEEKER_W1_DELIVERY.md)；共享范围、路径推荐、3/5 题、个人库保留与浏览器验收；W1–W3 合并提交 `0e67163`                                                  |
+| W2 简历答案分层                | 已提交推送   | [W2 交付](docs/JOB_SEEKER_W2_DELIVERY.md)；100 题同源结构、共用展示与失配回退，43/28 回归、14 项交互；`0e67163`                                                          |
+| W3 个人卡、自查、卡点补练      | 已提交推送   | [W3 交付](docs/JOB_SEEKER_W3_DELIVERY.md)；版本合并、观察幂等归属、历史快照、解决重开与固定队列，46/40 回归、15 项交互；`0e67163`                                        |
+| W4 范围正式覆盖与首期验收      | 已提交推送   | [W4 交付](docs/JOB_SEEKER_W4_DELIVERY.md)；目标/自选范围、正式覆盖、未练分页、卡片/证据/卡点计数，48/49 回归、13 项交互、16 项个人只读检查；`464218d`                    |
+| W5 项目模拟与连续追问          | 已交付并迁移 | [W5 交付](docs/JOB_SEEKER_W5_DELIVERY.md)；五节点快照、独立记录/恢复、隐藏未来内容、并发/重试、总结/补练，52/60 回归、13 项交互、16 项个人只读检查；本批次按约定提交推送 |
+| 答案长度与清晰度               | 已修订并导入 | 2026-10-10 [交付报告](docs/ANSWER_QUALITY_REVISION.md)、[670 题修订明细](docs/ANSWER_QUALITY_REVISION_DETAILS.json)；篇幅粗筛通过，保留个人数据                          |
 
 2026-10-08 的交付记录报告：28 项单元测试、16 项数据库集成测试通过，ESLint、TypeScript、生产构建通过；Chrome + Playwright 39 项检查通过，意外浏览器错误为 0。这些是上次交付的历史结果，本次开始时未重新运行，不能替代后续改动验证。
 
@@ -222,19 +231,27 @@ W3 新构建运行于 3000（本次 PID 25364），持久 PostgreSQL 5432（PID 
 
 W4 新构建运行于 3000（本次 PID 41588），持久 PostgreSQL 5432（本次核实 PID 17284），stderr 为空。16 项个人应用只读 HTTP/服务端内容检查通过，包含原入口与默认/自选/分页/空/无效范围；页面与服务端一致，全部启用题覆盖 13/670，简历覆盖 0/100。重启前后十表全记录与全部四个序列一致，仍为 1 用户、670 题、13 进度、14 历史事件、五张业务表为空、迁移版本 1 条、无默认目标。快照与结果在 `.local/backups/job-seeker-w4-20261011/records-before.json`、`verification.json`，仅为比对证据，不是完整恢复包；未执行个人库 seed、迁移或验收写入。W1–W3 已先提交推送 `0e67163` 并核对远端，W4 本批次按约定在验收后提交推送。细节见 [W4 交付](docs/JOB_SEEKER_W4_DELIVERY.md)。
 
+2026-10-12（北京时间）W5 新验证：52/52 单元、60/60 独立 PostgreSQL 集成、ESLint、TypeScript（生产构建内）与 Next.js 16.3.6 生产构建通过。新增 4 单元、8 模拟与 3 迁移集成，覆盖两项目五节点/快照、隐藏未来内容、创建/修改幂等及迟到重试、revision 冲突、事务回滚、用户归属、seed 不覆盖模拟与冻结迁移升级。未改公共题目、普通正式提交、自评、草稿或 W4 统计逻辑。
+
+最终构建在独立库 3001 通过 Chrome / Playwright 1.62.1 的 13 项交互，覆盖完整主问题与三个追问、草稿暂停/刷新/列表恢复、计时、本人卡点、跳过/口头状态、发票提前结束、应用重启/新浏览器、503 同请求重试、保存/创建响应丢失、双页面冲突合并、改文/停用快照、普通流程与正式覆盖、桌面/手机明暗主题、键盘与减少动画。意外 page error、console error/warning 均为 0；1440×1000 和 375×812 无横向溢出。已视觉核对桌面作答/总结及手机深色选择完整题干；截图/JSON/日志位于 `D:/CodexHome/visualizations/2026/10/12/agent-interview-w5/`。Browser 插件未列出，复用已有 Chrome/Playwright，未安装依赖；临时库、服务与浏览器已关闭。
+
+W5 个人库升级前备份十表完整 Schema/记录/四序列，在独立库实际恢复并比较字段/默认值/约束/索引与记录，再演练升级。通过后执行 `0002_mock_interview` 增量迁移；原九张业务表全字段、W0 迁移记录与四个序列不变，新增一个迁移版本和三张空模拟表。恢复包/快照/演练/升级/HTTP 证据位于 `.local/backups/job-seeker-w5-20261012/`；`restore-pre-w5.sql` 只向空库恢复，覆盖升级前状态。之后新增的模拟资料统一备份待 W7，禁止重跑旧升级脚本覆盖基线。
+
+W5 最终生产应用 3000（本次 PID 13128）、持久 PostgreSQL 5432（核实 PID 22016）运行，stderr 为空。16 项个人只读 HTTP/服务端内容检查通过，十三表全字段与全部四个序列前后一致：1 用户、670 启用题、13 进度、14 事件，五张首期业务表和三张模拟表均空，无默认目标，迁移版本 2 条，正式覆盖仍全部 13/670、简历 0/100。无效/不存在模拟页核对 notFound 文案，流式响应允许 200；API 分别 400/404。未执行个人 seed、db:push 或验收写入。
+
 ## 后续事项与已知限制
 
-W4 收尾：本次源码和文档格式、8 份文档 87 个本地链接、Git 差异检查通过。桌面/移动浅深主题截图已视觉核对；成功证据和个人比对快照保留，临时脚本、失败截图和重复日志清理。每批完成后继续按用户约定提交推送，W4 最新提交号以 Git 为准。
+W4 收尾（2026-10-11）：源码和文档格式、8 份文档 87 个本地链接、Git 差异检查通过，已提交推送 `464218d`。W5 收尾（2026-10-12）：格式、8 份文档 106 个本地链接检查通过，无用临时脚本、失败截图与重复日志已清理；成功证据和个人可恢复备份保留。本批次按约定提交推送，最新 SHA 以 Git 为准。
 
 答案修订已完成；后续按实际练习朗读调整语速和表达，并用本人代码、日志或脱敏材料补具体字段和个人故事。字数、完整段落与自动重复检查不能代替语义审阅和真实口头表达验收。
 
 可从 [简历题库](http://localhost:3000/questions?preset=resume_focus)、[简历 P0 短轮](http://localhost:3000/practice/session?preset=resume_focus&resumePriority=P0&mode=daily&size=5) 或 [训练目标](http://localhost:3000/learning-target) 开始，按实际答题情况补充本人例子和证据。题目依据指定简历；W1 没有重新验证 VendorGuard 或实习代码，参考设计不扩大为本人履历。
 
-后续按 [求职者需求分析](docs/JOB_SEEKER_REQUIREMENTS.md) 和批次计划继续：入口、目标、短轮、简历答案分层、个人卡、卡点补练和范围正式覆盖已实现，W0–W4 首期验收完成。第二期模拟面试、真实复盘与变化统计待 W5/W6；统一启动备份待 W7，JD/AI/语音待实际需求再评估。
+后续按 [求职者需求分析](docs/JOB_SEEKER_REQUIREMENTS.md) 和批次计划继续：W0–W4 首期验收及 W5 固定模拟已完成。真实复盘与关联补练待 W6；统一启动备份待 W7，JD/AI/语音待实际需求再评估。
 
-下一批次是 W5：从既有结构化简历题生成固定模拟脚本，保存独立节点回答、跳过和顺序，支持中断恢复和结束后统一回顾；不写普通题 practice 事件、不自动评分。W5 尚未开始。既有固定队列、正式提交、个人资料与统计契约仍以源码和 [W0](docs/JOB_SEEKER_W0_CONTRACT.md) 为准。
+下一批次是 W6：新增真实面试列表/新建/详情，保存日期、岗位/面试名称、实际问题、回答摘要、卡点和改进；可关联已有题并进入固定补练，未收录问题保留原话，不创建假公共题。复盘、关联和入口不写 practice 事件；补练状态只来自真实正式完成。W6 尚未开始。既有固定队列、正式提交、个人资料与统计契约以源码、[W0](docs/JOB_SEEKER_W0_CONTRACT.md) 和 [W5](docs/JOB_SEEKER_W5_DELIVERY.md) 为准。
 
-现有局限：所有访问者共享 `default` 用户；草稿和续练入口依赖当前浏览器存储；核心路径固定；普通新增题不会自动成为核心新题；应用需本地 PostgreSQL。历史浏览器验收覆盖 Chrome 桌面与模拟手机，未验证 Safari、Firefox 或实体手机。
+现有局限：所有访问者共享 `default` 用户；普通草稿/续练入口和模拟未保存编辑依赖当前浏览器存储，已保存模拟可从服务端列表恢复；模拟列表显示最近 20 轮，旧记录可用轮次 URL 读取。核心路径固定；普通新增题不会自动成为核心新题；应用需本地 PostgreSQL。历史浏览器验收覆盖 Chrome 桌面与模拟手机，未验证 Safari、Firefox 或实体手机。
 
 ## 文档导航
 
@@ -245,13 +262,14 @@ W4 收尾：本次源码和文档格式、8 份文档 87 个本地链接、Git �
 
 - [简历题库整理与导入](docs/RESUME_QUESTION_BANK.md)：2026-10-09 的内容范围、练习入口、能力边界及个人数据保留验证。
 - [求职者视角产品需求](docs/JOB_SEEKER_REQUIREMENTS.md)：2026-10-09 的现状分析、10 项需求与验收条件；当前交付状态见本文和开发计划。
-- [求职者训练闭环开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)：W0–W4 完成，W5–W8 待实施。
+- [求职者训练闭环开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md)：W0–W5 完成，W6–W8 待实施。
 - [W0 数据与兼容契约](docs/JOB_SEEKER_W0_CONTRACT.md)：实际字段、请求 / 并发、范围 / 统计、兼容与升级步骤。
 - [W1 简历入口、目标与短轮](docs/JOB_SEEKER_W1_DELIVERY.md)：2026-10-10 的实现、个人库迁移、41/28 回归、21 项交互、19 项只读检查与截图。
 - [W2 简历答案分层](docs/JOB_SEEKER_W2_DELIVERY.md)：2026-10-11 的共用结构与折叠、Markdown 回退、43/28 回归、14 项交互、9 项只读检查和个人记录保留。
 - [W3 个人卡、自查与卡点补练](docs/JOB_SEEKER_W3_DELIVERY.md)：2026-10-11 的接口、版本冲突、幂等归属、草稿/快照、46/40 回归、15 项交互与 11 项个人只读检查。
 - [W4 范围正式覆盖与首期验收](docs/JOB_SEEKER_W4_DELIVERY.md)：2026-10-11 的一致快照统计、未练分页与固定队列、48/49 回归、13 项交互与 16 项个人只读检查。
-- [领域词汇](CONTEXT.md)：目标、正式完成、个人卡、作答观察、卡点和正式覆盖的定义。
+- [W5 项目模拟与连续追问](docs/JOB_SEEKER_W5_DELIVERY.md)：2026-10-12 的五节点快照、独立保存恢复、隐藏未来内容、结束总结、十表恢复/十三表升级、52/60 回归、13 项交互与 16 项个人只读检查。
+- [领域词汇](CONTEXT.md)：目标、正式完成、个人卡、作答观察、卡点、正式覆盖与项目模拟的定义。
 - [答案质量检查](docs/ANSWER_QUALITY_AUDIT.md)：2026-10-09 的长度口径、表述问题、重复范围和修订示例；[逐题明细](docs/ANSWER_QUALITY_AUDIT_DETAILS.json)。
 - [答案质量修订交付](docs/ANSWER_QUALITY_REVISION.md)：2026-10-10 的全量修订、导入保留、备份恢复与 15 项 HTTP 检查；[修订后明细](docs/ANSWER_QUALITY_REVISION_DETAILS.json)。
 

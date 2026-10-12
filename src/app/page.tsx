@@ -92,6 +92,9 @@ export default async function HomePage() {
             )}
             <ContinueButton />
             <Button variant="ghost" asChild>
+              <Link href="/mock-interviews">项目模拟面试</Link>
+            </Button>
+            <Button variant="ghost" asChild>
               <Link href="/stats">查看目标进度</Link>
             </Button>
             <Button variant="ghost" asChild>

@@ -25,6 +25,11 @@ import type {
   ProjectScope,
   ResumePriority,
 } from "../lib/learning-contract";
+import type { ResumeLearningEntry } from "./resume-content";
+import type {
+  MockActionPayload,
+  MockNodeState,
+} from "../lib/mock-interview-contract";
 
 export const difficultyEnum = pgEnum("difficulty", ["easy", "medium", "hard"]);
 export const statusEnum = pgEnum("question_status", [
@@ -362,6 +367,116 @@ export const appSchemaMigrations = pgTable("app_schema_migrations", {
     .notNull()
     .defaultNow(),
 });
+
+export const mockRounds = pgTable(
+  "mock_rounds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: varchar("user_id", { length: 128 })
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    requestId: uuid("request_id").notNull(),
+    project: varchar("project", { length: 32 })
+      .$type<"VendorGuard" | "发票实习">()
+      .notNull(),
+    questionId: integer("question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "restrict" }),
+    reference: jsonb("reference").$type<ResumeLearningEntry>().notNull(),
+    foundations: jsonb("foundations")
+      .$type<{ id: number; question: string }[]>()
+      .notNull(),
+    revision: integer("revision").notNull().default(1),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("mock_rounds_identity_unique").on(table.id, table.userId),
+    uniqueIndex("mock_rounds_user_request_idx").on(
+      table.userId,
+      table.requestId,
+    ),
+    index("mock_rounds_user_date_idx").on(
+      table.userId,
+      table.createdAt,
+      table.id,
+    ),
+    check(
+      "mock_rounds_project_check",
+      sql`${table.project} in ('VendorGuard', '发票实习')`,
+    ),
+    check("mock_rounds_revision_check", sql`${table.revision} > 0`),
+  ],
+);
+
+export const mockNodes = pgTable(
+  "mock_nodes",
+  {
+    roundId: uuid("round_id").notNull(),
+    userId: varchar("user_id", { length: 128 }).notNull(),
+    position: integer("position").notNull(),
+    sourceQuestionId: integer("source_question_id")
+      .notNull()
+      .references(() => questions.id, { onDelete: "restrict" }),
+    parentPosition: integer("parent_position"),
+    prompt: text("prompt").notNull(),
+    state: varchar("state", { length: 16 })
+      .$type<MockNodeState>()
+      .notNull()
+      .default("pending"),
+    answer: text("answer").notNull().default(""),
+    elapsedSeconds: integer("elapsed_seconds").notNull().default(0),
+    gaps: text("gaps").array().$type<GapKind[]>().notNull().default([]),
+    gapNote: text("gap_note").notNull().default(""),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.roundId, table.position] }),
+    foreignKey({
+      name: "mock_nodes_round_identity_fk",
+      columns: [table.roundId, table.userId],
+      foreignColumns: [mockRounds.id, mockRounds.userId],
+    }).onDelete("restrict"),
+    check(
+      "mock_nodes_position_check",
+      sql`${table.position} between 0 and 4 and ((${table.position} < 2 and ${table.parentPosition} is null) or (${table.position} >= 2 and ${table.parentPosition} is not null and ${table.parentPosition} = 1))`,
+    ),
+    check(
+      "mock_nodes_state_check",
+      sql`${table.state} in ('pending', 'answered', 'skipped') and ((${table.state} = 'pending' and ${table.completedAt} is null) or (${table.state} <> 'pending' and ${table.completedAt} is not null))`,
+    ),
+    check(
+      "mock_nodes_content_check",
+      sql`length(${table.prompt}) between 1 and 10000 and length(${table.answer}) <= 10000 and length(${table.gapNote}) <= 2000 and ${table.elapsedSeconds} between 0 and 86400 and ${table.gaps} <@ array['concept', 'expression', 'evidence', 'follow_up', 'other']::text[]`,
+    ),
+  ],
+);
+
+export const mockRoundActions = pgTable(
+  "mock_round_actions",
+  {
+    roundId: uuid("round_id").notNull(),
+    userId: varchar("user_id", { length: 128 }).notNull(),
+    requestId: uuid("request_id").notNull(),
+    payload: jsonb("payload").$type<MockActionPayload>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.roundId, table.requestId] }),
+    foreignKey({
+      name: "mock_round_actions_round_identity_fk",
+      columns: [table.roundId, table.userId],
+      foreignColumns: [mockRounds.id, mockRounds.userId],
+    }).onDelete("restrict"),
+  ],
+);
 
 export type Question = typeof questions.$inferSelect;
 export type QuestionStatus = (typeof statusEnum.enumValues)[number];

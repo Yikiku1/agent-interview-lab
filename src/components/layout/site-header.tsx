@@ -13,6 +13,7 @@ const links = [
   { href: "/questions", label: "题库" },
   { href: "/review", label: "复习" },
   { href: "/practice-gaps", label: "卡点" },
+  { href: "/mock-interviews", label: "模拟" },
   { href: "/stats", label: "统计" },
 ];
 
@@ -36,7 +37,7 @@ export function SiteHeader() {
         </Link>
         <nav
           aria-label="主导航"
-          className="order-3 col-span-2 flex items-center gap-1 border-t border-border pt-2 sm:order-none sm:col-span-1 sm:justify-center sm:border-0 sm:pt-0"
+          className="order-3 col-span-2 flex flex-wrap items-center gap-1 border-t border-border pt-2 sm:order-none sm:col-span-1 sm:justify-center sm:border-0 sm:pt-0"
         >
           {links.map(({ href, label }) => {
             const selected =
