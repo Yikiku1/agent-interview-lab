@@ -73,12 +73,22 @@ export async function startTestDatabase(
       url,
       stop: async () => {
         await pg.stop();
-        await rm(folder, { recursive: true, force: true });
+        await rm(folder, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 100,
+        });
       },
     };
   } catch (error) {
     if (started) await pg.stop();
-    await rm(folder, { recursive: true, force: true });
+    await rm(folder, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
     throw error;
   }
 }

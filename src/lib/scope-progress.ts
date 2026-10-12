@@ -3,6 +3,7 @@ import { and, asc, count, eq, isNull, not, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   learningTargets,
+  interviewReviewQuestions,
   personalAnswerCards,
   practiceGaps,
   questions,
@@ -12,6 +13,7 @@ import {
 import { DEFAULT_USER_ID, questionCondition } from "@/lib/questions";
 import { gapKinds, scopeForTarget } from "@/lib/learning-contract";
 import type { Filters } from "@/lib/question-filters";
+import { reviewFollowUpExists } from "./interview-reviews";
 // ECMAScript trim whitespace, including non-breaking spaces and BOM from pasted text.
 const trimWhitespace =
   "\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
@@ -54,7 +56,7 @@ export async function getScopeProgress(
           .where(questionCondition(filters)),
       );
       const formal = sql<boolean>`exists (select 1 from ${reviewEvents} where ${reviewEvents.questionId} = ${scope.id} and ${reviewEvents.userId} = ${DEFAULT_USER_ID} and ${reviewEvents.kind} = 'practice')`;
-      const [[summary], [cards], gapRows] = await Promise.all([
+      const [[summary], [cards], gapRows, [reviewSummary]] = await Promise.all([
         tx
           .with(scope)
           .select({
@@ -104,6 +106,18 @@ export async function getScopeProgress(
             ),
           )
           .groupBy(practiceGaps.kind),
+        tx
+          .with(scope)
+          .select({
+            linked: count(),
+            practiced:
+              sql<number>`count(*) filter (where ${reviewFollowUpExists()})`.mapWith(
+                Number,
+              ),
+          })
+          .from(interviewReviewQuestions)
+          .innerJoin(scope, eq(scope.id, interviewReviewQuestions.questionId))
+          .where(eq(interviewReviewQuestions.userId, DEFAULT_USER_ID)),
       ]);
       const unpracticedTotal = summary.total - summary.covered;
       const pageSize = 12;
@@ -133,6 +147,10 @@ export async function getScopeProgress(
         evidenceFilled: cards.evidenceFilled,
         gaps,
         openGaps: gaps.reduce((sum, gap) => sum + gap.total, 0),
+        interviewReviews: {
+          ...reviewSummary,
+          pending: reviewSummary.linked - reviewSummary.practiced,
+        },
         unpracticed: {
           rows: unpracticed,
           total: unpracticedTotal,

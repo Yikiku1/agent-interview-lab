@@ -1,6 +1,6 @@
 # 面试训练台
 
-面向 Agent 开发与 LLM 应用开发岗位的个人刷题工具。支持简历与项目范围、训练目标、短轮练习、个人回答卡、要点自查、卡点补练、范围正式覆盖、项目模拟与连续追问、自评与历史回看、到期复习。
+面向 Agent 开发与 LLM 应用开发岗位的个人刷题工具。支持简历与项目范围、训练目标、短轮练习、个人回答卡、要点自查、卡点补练、范围正式覆盖、项目模拟与连续追问、真实面试复盘与关联补练、自评与历史回看、到期复习。
 
 开发与接手先阅读 [项目状态与开发交接](PROJECT_CONTEXT.md)，其中记录当前进度、运行状态、模块入口、开发习惯和验证证据。
 
@@ -46,6 +46,7 @@ pnpm dev
 - 展开参考或进入详情后，可记录要点覆盖情况和五类卡点，保存当时文本快照；可独立保存，也可在正式完成后关联该次回答。草稿切题、收起和刷新可恢复，请求重试不会重复记录；正式提交待确认时先保留草稿。
 - [我的卡点](http://localhost:3000/practice-gaps) 支持类型、解决状态和共享范围筛选，记录可回到题目与当次回答；支持解决/重开，以及按题去重的 3/5 题固定补练。停用题资料保留，补练跳过。[W3 交付与验证](docs/JOB_SEEKER_W3_DELIVERY.md)。
 - [项目模拟面试](http://localhost:3000/mock-interviews) 支持 VendorGuard / 发票实习，按职责、主问题和三个已有追问逐节点作答。保存文字或口头简记、跳过、本人卡点和可选计时，支持暂停 / 刷新续答；结束后统一回顾参考快照与补练建议。模拟不改普通练习次数、自评或正式覆盖，提前结束保留未答，已结束轮次可查看、另开新轮。[W5 交付与验证](docs/JOB_SEEKER_W5_DELIVERY.md)。
+- [真实面试复盘](http://localhost:3000/interview-reviews) 支持日期、可空岗位名称、实际问题、独立回答摘要、卡点和改进。只记录一个未收录问题也可保存；手动关联启用题后提供参考、个人卡和 3/5 题固定补练，原话与关联快照不随题库更新覆盖。补练状态只计算关联后新增正式完成，记录 / 编辑 / 打开补练不改普通次数；统计页按范围单独显示复盘问题的关联 / 已练 / 待练记录数。[W6 交付与验证](docs/JOB_SEEKER_W6_DELIVERY.md)。
 - 2026-10-10 全部 670 道答案已修订并导入：普通短答 120–180、简历短答 240–270 个有效字符范围检查通过；补充每题机制和示例，共享背景标为补充。篇幅按 30–60 / 60–90 秒估算，未做真人计时；[修订交付与验证](docs/ANSWER_QUALITY_REVISION.md)。
 - 自评区提供不会、模糊、掌握的独立回答标准；仅选择自评不计次数，口头或空白文字作答仍可完成。
 - Python、后端和数据库题目围绕 AI 应用所需的服务端能力；题库不含前端分类。LLM 分类聚焦 token、上下文、模型选型、输出控制与评估，不考注意力公式、MoE、LoRA 训练等算法细节。
@@ -59,6 +60,7 @@ pnpm dev
 - `review_events`：完成的练习，保存当次自评、文字回答、时间、提交 ID 和可选本轮 ID `round_id`；提交 ID 按用户唯一，保证重试不会多计。`kind=legacy` 表示旧版状态记录，`kind=practice` 表示新的完整练习。本轮总结从这些事件恢复，打开练习页本身不写入数据库。
 - `personal_answer_cards`、`practice_observations`、`answer_point_checks`、`practice_gaps`：长期个人卡、幂等观察父记录、要点快照及卡点；与正式完成分离，不改历史回答和复习安排。`learning_targets` 保存版本化目标，`app_schema_migrations` 记录受控迁移。
 - `mock_rounds`、`mock_nodes`、`mock_round_actions`：项目模拟、五节点快照和独立作答、持久请求记录；revision 与 requestId 保证冲突核对和重试不重复推进。进行中服务端隐藏未来追问题干与参考，结束后统一读取；模拟卡点独立于 W3 长期卡点。
+- `interview_reviews`、`interview_review_questions`、`interview_review_actions`：真实面试、原问题与个人复盘字段、持久修改请求；创建幂等、revision 冲突核对与独立草稿保留编辑。关联保存题干快照、时间与已有事件 ID 基线，同题多次面试独立跟进，不写普通正式事件或 W3 长期卡点。
 
 Schema 位于 `src/db/schema.ts`。原有题目的题干和结论位于 `src/db/seed-data.ts`，逐题说明位于 `src/db/seed-notes.ts`，主题背景位于 `src/db/seed-context.ts`，逐题示例与部分独立短答位于 `src/db/original-examples.ts`；岗位场景题及各题讲解、示例位于 `src/db/expansion-*.ts`。基础题位于 `src/db/basic-questions.ts`，核心题精修位于 `src/db/core-answers.ts`。简历题由 `src/db/resume-questions.ts` 汇总，`resume-content.ts` 统一来源和答案结构，具体内容位于 `resume-agent.ts`、`resume-rag.ts`、`resume-engineering.ts`、`resume-foundations.ts`。
 
@@ -66,11 +68,13 @@ Schema 位于 `src/db/schema.ts`。原有题目的题干和结论位于 `src/db/
 
 网页、建表和导入脚本统一使用 `src/db/config.ts` 加载 `.env*`；显式环境变量优先。新库通过 `pnpm db:push` 建表。旧四表数据库的 W0 升级使用版本化增量迁移，先备份并在独立库恢复、核对后执行 `pnpm db:migrate:w0 --apply`；省略参数只显示说明，不连接数据库，详见 [W0 契约与迁移步骤](docs/JOB_SEEKER_W0_CONTRACT.md)。题库内容需要更新时运行 `pnpm db:seed`。旧事件自动归为 `legacy`，保留原有次数，不回填从未保存过的回答。旧进度的 `next_review_at` 为空，进入待首次练习列表，完成后生成新安排。
 
-W0 已定义五张首期业务表和迁移版本表，W1 接入目标，W3 接入个人卡 / 观察 / 卡点，W4 接入范围统计。2026-10-12 W5 经升级前十表完整恢复与演练，受控迁移个人库到十三表；原记录与四个序列保留，五张首期业务表和三张模拟表尚为空，无默认目标。页面读取不自动创建个人记录。[领域词汇](CONTEXT.md) 区分正式完成、个人卡、作答观察、正式覆盖和项目模拟。
+W0 已定义五张首期业务表和迁移版本表，W1 接入目标，W3 接入个人卡 / 观察 / 卡点，W4 接入范围统计，W5 / W6 分别接入项目模拟与真实复盘。2026-10-12 W6 经升级前十三表完整恢复与演练，受控迁移个人库到十六表；原记录与四个序列保留，五张首期业务表、三张模拟表和三张复盘表尚为空，无默认目标。页面读取不自动创建个人记录。[领域词汇](CONTEXT.md) 区分正式完成、个人卡、作答观察、正式覆盖、项目模拟和复盘补练。
 
 `GET /api/learning-target` 只读当前目标；`PUT /api/learning-target` 严格校验并事务保存，保留旧版本。requestId 同配置重试返回原记录，不同配置返回 409；旧 inactive 请求不会重激活，写入失败回滚。保存只写目标，不增加正式练习事件。
 
 `POST /api/mock-interviews` 明确创建固定模拟；`GET /api/mock-interviews/[id]` 只读续答 / 总结，`PUT` 保存草稿、已答、跳过或结束。已保存记录由服务端恢复，未保存编辑按轮次 / 节点隔离保存在浏览器；暂时失败重试原 requestId，版本冲突保留文字供本人核对。
+
+`POST /api/interview-reviews` 创建真实复盘；`GET /api/interview-reviews/[id]` 只读详情，`PUT` 按 revision 与 requestId 保存编辑。`GET /api/interview-review-question-options?q=...` 只搜索启用题的轻量信息。已保存问题保留 ID / 顺序，新问题追加；公共关联可取消或更换，原话独立保留。
 
 `PUT /api/progress` 只更新掌握状态；`POST /api/attempts` 在一个事务内记录回答、更新练习次数和复习安排，回答上限 10,000 字符，支持空白回答及可选的 `roundId`。不同提交并发完成同一题时，以进度行锁串行更新次数和复习阶段。同一提交 ID 携带不同内容或本轮 ID 时返回 409，防止覆盖已经完成的练习。
 
@@ -79,6 +83,8 @@ W0 已定义五张首期业务表和迁移版本表，W1 接入目标，W3 接�
 W0 迁移说明：`pnpm db:migrate:w0`。旧四表库使用 `--apply` 前先完成契约文档中的恢复演练；本机个人库已在 W1 完成该步骤，新空库继续用 `db:push`。不能改写已应用迁移文件。
 
 W5 迁移说明：`pnpm db:migrate:w5`。已受控升级 W0 的旧库先备份、在独立库恢复并比对，再运行 `pnpm db:migrate:w5 --apply`；无参数不连接数据库。2026-10-12 本机个人库已完成，详见 [W5 恢复与迁移记录](docs/JOB_SEEKER_W5_DELIVERY.md)。
+
+W6 迁移说明：`pnpm db:migrate:w6`。已受控升级 W0 / W5 的旧库先备份、独立恢复并比对，再运行 `pnpm db:migrate:w6 --apply`；无参数不连接数据库。2026-10-12 本机个人库已完成，详见 [W6 恢复与迁移记录](docs/JOB_SEEKER_W6_DELIVERY.md)。已应用的 W0 / W5 / W6 SQL 均冻结。
 
 ```bash
 pnpm dev
@@ -95,7 +101,7 @@ pnpm db:seed
 
 ## 后续方向
 
-求职训练 [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md) 已完成 W0–W5：首期学习闭环及两项目固定模拟面试与追问。2026-10-12 W5 通过 52 项单元、60 项集成、静态与生产构建、13 项浏览器交互及 16 项个人只读检查，十三表全记录与序列保留；证据见 [W5 交付](docs/JOB_SEEKER_W5_DELIVERY.md)。下一批次 W6 真实面试复盘与关联补练尚未开始，之后是 W7 统一启动、备份恢复与导出。
+求职训练 [开发计划](docs/JOB_SEEKER_DEVELOPMENT_PLAN.md) 已完成 W0–W6：首期学习闭环、两项目固定模拟面试与追问、真实面试复盘与关联补练。2026-10-12 W6 通过 56 项单元、73 项集成、静态与生产构建、16 项浏览器交互及 27 项个人只读检查，十六表全记录与序列保留；证据见 [W6 交付](docs/JOB_SEEKER_W6_DELIVERY.md)。下一批次是 W7 统一启动、备份恢复与导出，本轮尚未开始。
 
 2026-10-09 [答案质量检查](docs/ANSWER_QUALITY_AUDIT.md)发现短答篇幅不足、模板重复和例子偏题；2026-10-10 已完成 [670 题修订与导入](docs/ANSWER_QUALITY_REVISION.md)。后续按实际练习朗读调整，并补本人证据；全文 Markdown 长度和自动字符检查不能代替讲解质量或真实口头表达验收。
 

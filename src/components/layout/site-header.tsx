@@ -14,6 +14,7 @@ const links = [
   { href: "/review", label: "复习" },
   { href: "/practice-gaps", label: "卡点" },
   { href: "/mock-interviews", label: "模拟" },
+  { href: "/interview-reviews", label: "复盘" },
   { href: "/stats", label: "统计" },
 ];
 

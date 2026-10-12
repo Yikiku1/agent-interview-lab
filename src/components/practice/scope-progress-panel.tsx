@@ -152,6 +152,37 @@ export function ScopeProgressPanel({
         )}
       </section>
       <section
+        aria-labelledby="scope-interview-reviews-title"
+        className="flex flex-col gap-3"
+      >
+        <div className="section-heading mb-0">
+          <h3 id="scope-interview-reviews-title" className="section-title">
+            范围内面试复盘问题
+          </h3>
+          <Link className="subtle-link" href="/interview-reviews">
+            查看复盘与补练
+          </Link>
+        </div>
+        <div data-testid="scope-review-metrics">
+          <StatsStrip
+            metrics={[
+              {
+                label: "已关联复盘问题",
+                value: progress.interviewReviews.linked,
+              },
+              {
+                label: "关联后正式练过",
+                value: progress.interviewReviews.practiced,
+              },
+              { label: "待正式补练", value: progress.interviewReviews.pending },
+            ]}
+          />
+        </div>
+        <p className="text-xs leading-6 text-muted-foreground">
+          按复盘问题记录计数；同题多次面试分别保留。只有关联后新增正式完成记录才算练过，记录复盘或打开补练不计入。
+        </p>
+      </section>
+      <section
         id="unpracticed"
         aria-labelledby="unpracticed-title"
         className="scroll-mt-6 flex flex-col gap-4"

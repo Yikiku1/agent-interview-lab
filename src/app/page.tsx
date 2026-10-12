@@ -95,6 +95,9 @@ export default async function HomePage() {
               <Link href="/mock-interviews">项目模拟面试</Link>
             </Button>
             <Button variant="ghost" asChild>
+              <Link href="/interview-reviews">真实面试复盘</Link>
+            </Button>
+            <Button variant="ghost" asChild>
               <Link href="/stats">查看目标进度</Link>
             </Button>
             <Button variant="ghost" asChild>

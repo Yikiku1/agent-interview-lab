@@ -27,6 +27,10 @@ import type {
 } from "../lib/learning-contract";
 import type { ResumeLearningEntry } from "./resume-content";
 import type {
+  ReviewCreatePayload,
+  ReviewUpdatePayload,
+} from "../lib/interview-review-contract";
+import type {
   MockActionPayload,
   MockNodeState,
 } from "../lib/mock-interview-contract";
@@ -474,6 +478,115 @@ export const mockRoundActions = pgTable(
       name: "mock_round_actions_round_identity_fk",
       columns: [table.roundId, table.userId],
       foreignColumns: [mockRounds.id, mockRounds.userId],
+    }).onDelete("restrict"),
+  ],
+);
+
+export const interviewReviews = pgTable(
+  "interview_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: varchar("user_id", { length: 128 })
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    requestId: uuid("request_id").notNull(),
+    creation: jsonb("creation").$type<ReviewCreatePayload>().notNull(),
+    interviewDate: date("interview_date").notNull(),
+    name: varchar("name", { length: 200 }).notNull().default(""),
+    note: text("note").notNull().default(""),
+    revision: integer("revision").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("interview_reviews_identity_unique").on(table.id, table.userId),
+    uniqueIndex("interview_reviews_user_request_idx").on(
+      table.userId,
+      table.requestId,
+    ),
+    index("interview_reviews_user_date_idx").on(
+      table.userId,
+      table.interviewDate,
+      table.createdAt,
+      table.id,
+    ),
+    check(
+      "interview_reviews_content_check",
+      sql`${table.revision} > 0 and length(${table.note}) <= 4000`,
+    ),
+  ],
+);
+export const interviewReviewQuestions = pgTable(
+  "interview_review_questions",
+  {
+    reviewId: uuid("review_id").notNull(),
+    id: uuid("id").notNull(),
+    userId: varchar("user_id", { length: 128 }).notNull(),
+    position: integer("position").notNull(),
+    prompt: text("prompt").notNull(),
+    answerSummary: text("answer_summary").notNull().default(""),
+    gaps: text("gaps").array().$type<GapKind[]>().notNull().default([]),
+    gapNote: text("gap_note").notNull().default(""),
+    improvement: text("improvement").notNull().default(""),
+    questionId: integer("question_id").references(() => questions.id, {
+      onDelete: "restrict",
+    }),
+    questionSnapshot: text("question_snapshot"),
+    linkedAt: timestamp("linked_at", { withTimezone: true }),
+    practiceAfterEventId: integer("practice_after_event_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.reviewId, table.id] }),
+    unique("interview_review_questions_position_unique").on(
+      table.reviewId,
+      table.position,
+    ),
+    foreignKey({
+      name: "interview_review_questions_owner_fk",
+      columns: [table.reviewId, table.userId],
+      foreignColumns: [interviewReviews.id, interviewReviews.userId],
+    }).onDelete("restrict"),
+    index("interview_review_questions_user_question_idx").on(
+      table.userId,
+      table.questionId,
+    ),
+    check(
+      "interview_review_questions_content_check",
+      sql`${table.position} between 0 and 19 and length(${table.prompt}) between 1 and 10000 and length(${table.answerSummary}) <= 10000 and length(${table.gapNote}) <= 2000 and length(${table.improvement}) <= 10000 and ${table.gaps} <@ array['concept', 'expression', 'evidence', 'follow_up', 'other']::text[]`,
+    ),
+    check(
+      "interview_review_questions_link_check",
+      sql`(${table.questionId} is null and ${table.questionSnapshot} is null and ${table.linkedAt} is null and ${table.practiceAfterEventId} is null) or (${table.questionId} is not null and ${table.questionSnapshot} is not null and ${table.linkedAt} is not null and ${table.practiceAfterEventId} is not null and ${table.practiceAfterEventId} >= 0)`,
+    ),
+  ],
+);
+export const interviewReviewActions = pgTable(
+  "interview_review_actions",
+  {
+    reviewId: uuid("review_id").notNull(),
+    userId: varchar("user_id", { length: 128 }).notNull(),
+    requestId: uuid("request_id").notNull(),
+    payload: jsonb("payload").$type<ReviewUpdatePayload>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.reviewId, table.requestId] }),
+    foreignKey({
+      name: "interview_review_actions_owner_fk",
+      columns: [table.reviewId, table.userId],
+      foreignColumns: [interviewReviews.id, interviewReviews.userId],
     }).onDelete("restrict"),
   ],
 );
