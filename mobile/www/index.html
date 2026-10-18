@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#326f63" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'"
+    />
+    <title>面试训练台 · 离线版</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <header>
+      <a href="#home" class="brand">面试训练台 <span>离线版</span></a
+      ><button id="theme" aria-label="切换深浅主题">◐</button>
+    </header>
+    <main id="app" tabindex="-1"><p>正在打开本地题库…</p></main>
+    <nav aria-label="主导航">
+      <a href="#home">今日</a><a href="#questions">题库</a
+      ><a href="#review">复习</a><a href="#more">我的</a>
+    </nav>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

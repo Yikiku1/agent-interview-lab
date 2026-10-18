@@ -6,6 +6,8 @@
 
 ## 本地启动
 
+安卓手机离线使用见 [安卓离线版安装与交付](docs/ANDROID_OFFLINE_DELIVERY.md)：内置 670 题，记录存手机，安装包在 `.local/releases/interview-lab-offline.apk`，无需电脑保持运行。
+
 本机已有数据库与项目依赖时，Windows 日常启动直接运行：
 
 ```powershell

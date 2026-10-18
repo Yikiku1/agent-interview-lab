@@ -1,12 +1,14 @@
 # 面试训练台：项目状态与开发交接
 
-最后更新：2026-10-12（北京时间）。工作目录：`D:\projects\agent-interview-lab`。
+最后更新：2026-10-18（北京时间）。工作目录：`D:\projects\agent-interview-lab`。
 
 本文是持续维护的项目状态入口。接手开发、排查问题或整理题库时先读本文，再读涉及模块。源码、实际探针和检查结果决定当前事实；历史交付记录用于追溯，计划不等于已实现。
 
 长期维护入口是 [AGENTS.md](AGENTS.md) 的“项目长期上下文”：每次本项目任务开始读取本文，收尾核对并同步本次变化。全局长期记忆仅保存本项目路径和维护约定，具体状态集中在本文。
 
 ## 当前结论
+
+2026-10-18（北京时间）新增独立安卓离线版，交付与边界见 [安卓离线版](docs/ANDROID_OFFLINE_DELIVERY.md)。内置源码 670 题/100 题分层答案，Java WebView + 手机私有 SQLite 保存学习状态，已实现短轮/续练/复习/个人卡/卡点/目标/统计/五节点模拟/单问题面试复盘及 JSON 备份。实际签名 APK 位于 `.local/releases/interview-lab-offline.apk`；不读取或打包个人 PostgreSQL 数据，电脑与手机不自动同步。桌面 W0–W7 与 W8 原状态不变。
 
 项目已具备个人面试学习闭环、固定项目模拟、真实面试复盘与本地启动/备份恢复。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖已在 `464218d`；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟已在 `1bbeb7b`；[W6](docs/JOB_SEEKER_W6_DELIVERY.md) 真实复盘与关联补练已在 `a5fa217` 提交推送。2026-10-12 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)完成 Windows 启动、版本化十六表完整备份、显式独立空库恢复与可读导出；已实际恢复个人包并核对 Schema/全部记录/四序列，真实冷启动与重复复用通过。最终应用运行于 3000，原记录保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W8 按需评估，本轮未进入。短答起草范围检查通过，未做真人计时。
 
@@ -141,6 +143,10 @@ W7 定位入口：`scripts/start-local.ps1` / `start-local.ts` 提供 Windows �
 
 ## 启动与验证
 
+2026-10-18（北京时间）手机外网访问检查：电脑未发现 Tailscale CLI 或默认安装路径，应用 3000 端口实际仅监听 `127.0.0.1`。建议安装并登录 Tailscale 后用 Serve 将私人网络 HTTPS 入口代理至 `http://127.0.0.1:3000`；本次未安装、配置或验证远程访问。
+
+2026-10-18（北京时间）启动核对：用户的 `pnpm local:start` 因 pnpm store 启动器路径报错，已绕过 wrapper 执行 `pwsh -NoProfile -File scripts/start-local.ps1`，成功启动既有持久 PostgreSQL 和应用（启动输出 PID 19600），并触发浏览器打开。首页 HTTP 200 且包含面试/训练内容；未导入或重置个人数据。后续可直接使用该 PowerShell 入口；全局 pnpm 启动器未修复。以下历史运行验证保留原日期。
+
 通常按 README 使用 pnpm；Windows 上 wrapper 有问题时，直接调用项目依赖的 Node 入口。环境加载集中在 `src/db/config.ts`，显式 `DATABASE_URL` 优先于 `.env*`。不要把真实密码写入文档。
 
 ```powershell
@@ -177,6 +183,8 @@ git diff --check
 日常使用 W7 PowerShell 入口默认打开浏览器；`-NoBrowser`只核对服务，`-Port`明确端口，应用正常停止后`-Build`重建。备份默认`.local/backups/`、导出`.local/exports/`，每次唯一目录，已由`.gitignore`统一忽略；恢复默认只校验，实际`--apply`要求显式另一空库。异常启动锁残留先核对`.local/start.lock`的PID停止状态，再清理锁；详细操作见[W7](docs/JOB_SEEKER_W7_DELIVERY.md)。
 
 ## 验证记录与开发进度
+
+2026-10-18（北京时间）安卓离线版新验证：69/69 单元测试（新增 11 项离线持久/幂等/恢复/非法数据契约）、TypeScript 与本次源码 ESLint 通过。已有 Chrome + Playwright 在 390×844 / 1280×900 验证核心交互、草稿刷新/页面重开、题库筛选/分层、模拟/复盘、目标/统计/备份、无横向溢出与深色主题；无页面运行错误、无外部请求。Native bridge 浏览器替身验证不等于 Android 真机测试。APK 实际编译、zipalign、v2/v3 签名、Manifest 与五个内嵌资源 SHA256 核对通过；无设备/模拟器，真机 SQLite、文件选择器和返回键尚未实测。源码/构建/安装/范围差异详见上述交付文档；未执行个人库写入、重置或迁移。
 
 2026-10-09：按用户要求，将每次任务读取与收尾同步本文的约定写入项目 `AGENTS.md`，并保存长期记忆更新备注。`CLAUDE.md` 继续只引用 `AGENTS.md`。本次仅修改文档，验证格式和文档入口；没有重跑应用测试或更新运行快照。
 
