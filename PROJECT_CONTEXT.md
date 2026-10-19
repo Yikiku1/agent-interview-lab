@@ -14,6 +14,8 @@
 
 2026-10-19（北京时间）修复首次打开时 Android Java Bridge 空库返回值兼容：部分 WebView 将 Java `null` 转为 JS `undefined`，页面误报“存储值不是有效文本”。原生层改用版本化空状态标记，页面仅将该标记映射为空状态；新增单元回归。最终 APK SHA256 为 `3C8339D7590D17F48C57054C80BA944D73951D547AE31550DB1E0F76BB0DF959`。
 
+2026-10-19（北京时间）修复 `loadDataWithBaseURL` 首页被导航拦截器阻断的问题：`data:` 仅用于 APK 内首页 bootstrap，现明确放行；外部导航继续拒绝。用户截图中的 `net::ERR_HTTP_RESPONSE_CODE_FAILURE` 对应此回归。最终 APK SHA256 为 `A8A1F6F38CF205FEC65A31DCC4EF4714F449BDFFF4940E3BF514F1948B6F20DD`。
+
 2026-10-18（北京时间）新增独立安卓离线版，交付与边界见 [安卓离线版](docs/ANDROID_OFFLINE_DELIVERY.md)。内置源码 670 题/100 题分层答案，Java WebView + 手机私有 SQLite 保存学习状态，已实现短轮/续练/复习/个人卡/卡点/目标/统计/五节点模拟/单问题面试复盘及 JSON 备份。实际签名 APK 位于 `.local/releases/interview-lab-offline.apk`；不读取或打包个人 PostgreSQL 数据，电脑与手机不自动同步。桌面 W0–W7 与 W8 原状态不变。
 
 项目已具备个人面试学习闭环、固定项目模拟、真实面试复盘与本地启动/备份恢复。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖已在 `464218d`；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟已在 `1bbeb7b`；[W6](docs/JOB_SEEKER_W6_DELIVERY.md) 真实复盘与关联补练已在 `a5fa217` 提交推送。2026-10-12 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)完成 Windows 启动、版本化十六表完整备份、显式独立空库恢复与可读导出；已实际恢复个人包并核对 Schema/全部记录/四序列，真实冷启动与重复复用通过。最终应用运行于 3000，原记录保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W8 按需评估，本轮未进入。短答起草范围检查通过，未做真人计时。

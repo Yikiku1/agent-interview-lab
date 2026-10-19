@@ -60,7 +60,12 @@ public final class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "OfflineNative");
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return !local(request.getUrl());
+                Uri uri = request.getUrl();
+                // loadDataWithBaseURL uses a data: document for the bundled
+                // entry page. It is local bootstrap content, not an external
+                // navigation; blocking it produces ERR_HTTP_RESPONSE_CODE_FAILURE.
+                if ("data".equals(uri.getScheme())) return false;
+                return !local(uri);
             }
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();

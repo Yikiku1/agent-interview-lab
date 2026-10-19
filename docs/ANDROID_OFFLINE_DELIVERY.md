@@ -6,6 +6,8 @@
 
 2026-10-19 三次修复：部分 Android WebView 将 Java Bridge 的空值返回为 JavaScript `undefined`，首次打开时被误判为存储损坏。原生层现在返回版本化空状态标记，页面只将该标记视为新安装空库，其他非法存储仍拒绝。
 
+2026-10-19 四次修复：`loadDataWithBaseURL` 的 `data:` 首页被导航拦截器误判为外部页面，出现 `net::ERR_HTTP_RESPONSE_CODE_FAILURE`。现在只放行这一个本地 bootstrap 文档，外部导航仍全部拒绝。
+
 2026-10-19 修复启动竞态：题库异步加载期间点击“我的”子入口曾触发 `store.getState()` 未定义。现在所有路由在题库与本地状态初始化完成前保持加载状态，备份回调也会提示稍后重试；重新构建 APK 后不再调用半初始化状态。
 
 ## 安装与使用
@@ -44,7 +46,7 @@ Browser plugin 不可用，使用已有 Playwright + 已安装 Chrome headless�
 
 实际 APK 已完成 javac/D8 编译、zipalign、v2/v3 签名验证、Manifest 无网络权限检查，五个 APK 内资源 SHA256 与最终源文件逐一比对。具体产物 SHA256 由构建脚本输出；密钥与产物在 `.local/`，不提交仓库。
 
-本次最终 APK SHA256：`3C8339D7590D17F48C57054C80BA944D73951D547AE31550DB1E0F76BB0DF959`。
+本次最终 APK SHA256：`A8A1F6F38CF205FEC65A31DCC4EF4714F449BDFFF4940E3BF514F1948B6F20DD`。
 
 ## 当前限制
 
