@@ -12,6 +12,8 @@
 
 2026-10-19（北京时间）继续修复部分 Android WebView 直接导航合成 `appassets.androidplatform.net` 失败：原生壳改为从 APK 内读取 `index.html`，以本地 HTTPS 基址加载并继续拦截脚本/样式/题库资源。最终 APK SHA256 为 `219BF3E3D07BA151A02A5A6D7B81553FB9C1D68E694B22D93E0F572D27E96F60`；仍需用户手机实测确认。
 
+2026-10-19（北京时间）修复首次打开时 Android Java Bridge 空库返回值兼容：部分 WebView 将 Java `null` 转为 JS `undefined`，页面误报“存储值不是有效文本”。原生层改用版本化空状态标记，页面仅将该标记映射为空状态；新增单元回归。最终 APK SHA256 为 `3C8339D7590D17F48C57054C80BA944D73951D547AE31550DB1E0F76BB0DF959`。
+
 2026-10-18（北京时间）新增独立安卓离线版，交付与边界见 [安卓离线版](docs/ANDROID_OFFLINE_DELIVERY.md)。内置源码 670 题/100 题分层答案，Java WebView + 手机私有 SQLite 保存学习状态，已实现短轮/续练/复习/个人卡/卡点/目标/统计/五节点模拟/单问题面试复盘及 JSON 备份。实际签名 APK 位于 `.local/releases/interview-lab-offline.apk`；不读取或打包个人 PostgreSQL 数据，电脑与手机不自动同步。桌面 W0–W7 与 W8 原状态不变。
 
 项目已具备个人面试学习闭环、固定项目模拟、真实面试复盘与本地启动/备份恢复。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖已在 `464218d`；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟已在 `1bbeb7b`；[W6](docs/JOB_SEEKER_W6_DELIVERY.md) 真实复盘与关联补练已在 `a5fa217` 提交推送。2026-10-12 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)完成 Windows 启动、版本化十六表完整备份、显式独立空库恢复与可读导出；已实际恢复个人包并核对 Schema/全部记录/四序列，真实冷启动与重复复用通过。最终应用运行于 3000，原记录保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W8 按需评估，本轮未进入。短答起草范围检查通过，未做真人计时。
@@ -189,6 +191,8 @@ git diff --check
 ## 验证记录与开发进度
 
 2026-10-19（北京时间）安卓离线修复验证：11/11 离线状态单测、TypeScript、目标 ESLint 与差异检查通过；Chrome 手机/桌面预览通过直接在题库加载期间进入 `#more` 并点击“学习统计”，无页面错误且正确显示统计页。最终 APK 重新通过 Java/D8、zipalign、v2/v3 签名、Manifest/资源 SHA256 核对；真机 SQLite、WebView 与系统文件选择器仍未实测。
+
+2026-10-19（北京时间）新增空库 Bridge 回归后，离线状态测试为 12/12；TypeScript、目标 ESLint、APK 编译/签名/zipalign/资源核对通过。用户此前截图对应的“设备读取失败：存储值不是有效文本”由 Java null/undefined 转换造成，已在当前 APK 修复。
 
 2026-10-18（北京时间）安卓离线版新验证：69/69 单元测试（新增 11 项离线持久/幂等/恢复/非法数据契约）、TypeScript 与本次源码 ESLint 通过。已有 Chrome + Playwright 在 390×844 / 1280×900 验证核心交互、草稿刷新/页面重开、题库筛选/分层、模拟/复盘、目标/统计/备份、无横向溢出与深色主题；无页面运行错误、无外部请求。Native bridge 浏览器替身验证不等于 Android 真机测试。APK 实际编译、zipalign、v2/v3 签名、Manifest 与五个内嵌资源 SHA256 核对通过；无设备/模拟器，真机 SQLite、文件选择器和返回键尚未实测。源码/构建/安装/范围差异详见上述交付文档；未执行个人库写入、重置或迁移。
 

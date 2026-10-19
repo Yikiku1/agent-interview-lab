@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 public final class MainActivity extends Activity {
     private static final String ORIGIN = "https://appassets.androidplatform.net/";
+    private static final String EMPTY_STATE = "__INTERVIEW_LAB_EMPTY_STATE_V1__";
     private static final int EXPORT = 11, IMPORT = 12;
     private WebView web;
     private SQLiteDatabase db;
@@ -98,7 +99,9 @@ public final class MainActivity extends Activity {
     public final class Bridge {
         @JavascriptInterface public synchronized String readState() {
             try (Cursor cursor = db.rawQuery("SELECT json FROM state WHERE id=1", null)) {
-                return cursor.moveToFirst() ? cursor.getString(0) : null;
+                // Returning Java null becomes `undefined` in some Android WebView
+                // versions. Use an explicit sentinel for a valid first launch.
+                return cursor.moveToFirst() ? cursor.getString(0) : EMPTY_STATE;
             }
         }
         @JavascriptInterface public synchronized boolean writeState(String json) {

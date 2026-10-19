@@ -323,7 +323,10 @@ export function parseBackup(text, questions) {
 export function createStorage() {
   if (globalThis.OfflineNative)
     return {
-      read: () => globalThis.OfflineNative.readState(),
+      read: () => {
+        const value = globalThis.OfflineNative.readState();
+        return value === "__INTERVIEW_LAB_EMPTY_STATE_V1__" ? null : value;
+      },
       write: (text) => {
         if (globalThis.OfflineNative.writeState(text) !== true)
           fail("设备保存失败");

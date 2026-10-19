@@ -3,10 +3,17 @@ import assert from "node:assert/strict";
 // Browser ESM deliberately contains no Node or framework dependency.
 import {
   createStore,
+  createStorage,
   emptyState,
   scheduleReview,
   parseBackup,
 } from "../../mobile/www/store.js";
+type NativeGlobal = typeof globalThis & {
+  OfflineNative?: {
+    readState: () => unknown;
+    writeState: (text: string) => boolean;
+  };
+};
 type CorruptibleBackup = {
   state: {
     progress: Record<number, { practiceCount: number }>;
@@ -39,6 +46,22 @@ function fixture() {
   };
 }
 const at = "2026-10-18T00:00:00.000Z";
+test("native empty-state sentinel initializes a fresh profile", () => {
+  const root = globalThis as NativeGlobal;
+  const previous = root.OfflineNative;
+  root.OfflineNative = {
+    readState: () => "__INTERVIEW_LAB_EMPTY_STATE_V1__",
+    writeState: () => true,
+  };
+  try {
+    assert.deepEqual(
+      createStore({ questions, storage: createStorage() }).getState(),
+      emptyState(),
+    );
+  } finally {
+    root.OfflineNative = previous;
+  }
+});
 test("fresh installation is empty; state survives a new store and copies cannot mutate memory", () => {
   const f = fixture();
   const a = createStore({ questions, storage: f.storage });
