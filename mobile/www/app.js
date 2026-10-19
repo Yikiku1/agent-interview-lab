@@ -369,7 +369,7 @@ function reviewPage() {
   }</section><a class="button" href="#gaps">查看卡点补练</a>`;
 }
 function more() {
-  app.innerHTML = `<h1>我的学习</h1><p class="muted">离线版 1.0 · 全部资料保存在这台手机</p><section class="panel">${[
+  app.innerHTML = `<h1>我的学习</h1><p class="muted">离线版 1.0.1 · 全部资料保存在这台手机</p><section class="panel">${[
     ["stats", "学习统计"],
     ["target", "训练目标"],
     ["gaps", "卡点与定向补练"],

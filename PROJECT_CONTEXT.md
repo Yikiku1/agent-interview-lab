@@ -8,13 +8,9 @@
 
 ## 当前结论
 
-2026-10-19（北京时间）修复安卓离线版启动竞态：题库异步加载期间提前点击“我的”入口会调用未初始化的 `store.getState()`，现由统一 readiness gate 保持加载态；备份回调也在未初始化时明确提示。最终 APK 已重打，SHA256 为 `15FF5F23235CA790A6CD116FFD12107174941845994615CD3263378CDC1A2B2A`。
+2026-10-19（北京时间）安卓离线版当前为 **1.0.1 / versionCode 2**，产物 `.local/releases/interview-lab-offline-1.0.1.apk`（兼容入口 `interview-lab-offline.apk`），SHA256 `92AD0F8D162985C6AAA767545BA6FC6D3722133BB737F2DC5953FAE060312B19`。已在 Android 15 / WebView 124 模拟器实际复现用户错误并定位：`loadDataWithBaseURL` 的空内部 `data:` 主文档被 **资源拦截器**返回 403；此前只修改导航回调的 APK 仍会失败。现仅对精确内部请求返回 null，实际启动/SQLite/强制停止恢复/升级保留/系统导出导入均验证通过；详见[交付与验证](docs/ANDROID_OFFLINE_DELIVERY.md)。用户实体手机仍未连接。
 
-2026-10-19（北京时间）继续修复部分 Android WebView 直接导航合成 `appassets.androidplatform.net` 失败：原生壳改为从 APK 内读取 `index.html`，以本地 HTTPS 基址加载并继续拦截脚本/样式/题库资源。最终 APK SHA256 为 `219BF3E3D07BA151A02A5A6D7B81553FB9C1D68E694B22D93E0F572D27E96F60`；仍需用户手机实测确认。
-
-2026-10-19（北京时间）修复首次打开时 Android Java Bridge 空库返回值兼容：部分 WebView 将 Java `null` 转为 JS `undefined`，页面误报“存储值不是有效文本”。原生层改用版本化空状态标记，页面仅将该标记映射为空状态；新增单元回归。最终 APK SHA256 为 `3C8339D7590D17F48C57054C80BA944D73951D547AE31550DB1E0F76BB0DF959`。
-
-2026-10-19（北京时间）修复 `loadDataWithBaseURL` 首页被导航拦截器阻断的问题：`data:` 仅用于 APK 内首页 bootstrap，现明确放行；外部导航继续拒绝。用户截图中的 `net::ERR_HTTP_RESPONSE_CODE_FAILURE` 对应此回归。最终 APK SHA256 为 `A8A1F6F38CF205FEC65A31DCC4EF4714F449BDFFF4940E3BF514F1948B6F20DD`。
+前几次关于合成域名导航与 Java null 转换的解释缺少 Android 运行证据，不能作为已确认根因。初始化门控与明确空库标记保留；当前结论以本次 Android 模拟器日志、仪器测试与签名 APK 为准。
 
 2026-10-18（北京时间）新增独立安卓离线版，交付与边界见 [安卓离线版](docs/ANDROID_OFFLINE_DELIVERY.md)。内置源码 670 题/100 题分层答案，Java WebView + 手机私有 SQLite 保存学习状态，已实现短轮/续练/复习/个人卡/卡点/目标/统计/五节点模拟/单问题面试复盘及 JSON 备份。实际签名 APK 位于 `.local/releases/interview-lab-offline.apk`；不读取或打包个人 PostgreSQL 数据，电脑与手机不自动同步。桌面 W0–W7 与 W8 原状态不变。
 
@@ -192,9 +188,11 @@ git diff --check
 
 ## 验证记录与开发进度
 
+2026-10-19（北京时间）1.0.1 实际 Android 回归：新增 `android/tests/SmokeTest.java` / `android/test-device.ps1`，驱动真实签名 APK 的 WebView 和 SQLite。Android 15 API35 / WebView 124.0.6367.219 中先复现旧包 `ERR_HTTP_RESPONSE_CODE_FAILURE`，原生日志明确收到空内部 data 主文档；修复资源回调后，同环境首次打开、实际草稿/正式回答写入、100题筛选、force-stop后恢复、1.0.0→1.0.1覆盖升级保留记录、系统选择器实际导出/导入及原生确认通过。最终包在飞行模式下重跑写入与恢复通过，截图 `android-1.0.1-emulator.png` 保存本次可视化目录。70/70主机单元（离线12项）、TypeScript、目标ESLint和差异检查通过；最终编译/zipalign/签名/资源hash核对通过。此验证覆盖模拟器，未覆盖用户实体手机及所有WebView版本；未写桌面个人PostgreSQL。
+
 2026-10-19（北京时间）安卓离线修复验证：11/11 离线状态单测、TypeScript、目标 ESLint 与差异检查通过；Chrome 手机/桌面预览通过直接在题库加载期间进入 `#more` 并点击“学习统计”，无页面错误且正确显示统计页。最终 APK 重新通过 Java/D8、zipalign、v2/v3 签名、Manifest/资源 SHA256 核对；真机 SQLite、WebView 与系统文件选择器仍未实测。
 
-2026-10-19（北京时间）新增空库 Bridge 回归后，离线状态测试为 12/12；TypeScript、目标 ESLint、APK 编译/签名/zipalign/资源核对通过。用户此前截图对应的“设备读取失败：存储值不是有效文本”由 Java null/undefined 转换造成，已在当前 APK 修复。
+2026-10-19（北京时间，早期主机检查）新增空库 Bridge 回归后，离线状态测试为 12/12；TypeScript、目标 ESLint、APK 编译/签名/zipalign/资源核对通过。当时将“设备读取失败：存储值不是有效文本”归因于 Java null/undefined 转换，但未用设备验证，该解释不作已证实结论。
 
 2026-10-18（北京时间）安卓离线版新验证：69/69 单元测试（新增 11 项离线持久/幂等/恢复/非法数据契约）、TypeScript 与本次源码 ESLint 通过。已有 Chrome + Playwright 在 390×844 / 1280×900 验证核心交互、草稿刷新/页面重开、题库筛选/分层、模拟/复盘、目标/统计/备份、无横向溢出与深色主题；无页面运行错误、无外部请求。Native bridge 浏览器替身验证不等于 Android 真机测试。APK 实际编译、zipalign、v2/v3 签名、Manifest 与五个内嵌资源 SHA256 核对通过；无设备/模拟器，真机 SQLite、文件选择器和返回键尚未实测。源码/构建/安装/范围差异详见上述交付文档；未执行个人库写入、重置或迁移。
 

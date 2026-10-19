@@ -2,17 +2,15 @@
 
 更新：2026-10-19（北京时间）。安卓离线版与现有 Next.js / PostgreSQL 桌面版独立，安装后不需要电脑、服务器、登录或网络。
 
-2026-10-19 二次修复：部分 Android WebView 无法直接导航到合成 `appassets.androidplatform.net` 首页，表现为“无法加载”。现在原生壳从 APK 读取 `index.html`，使用同一 HTTPS 基址加载，再由本地拦截器提供 ESM、CSS 和题库资源。
+当前版本 **1.0.1 / versionCode 2**。已在 Android 15 / WebView 124 模拟器中复现用户的 `net::ERR_HTTP_RESPONSE_CODE_FAILURE`，并通过原生日志定位：`loadDataWithBaseURL` 先发起空的内部 `data:text/html;charset=utf-8;base64,` 主文档请求，`shouldInterceptRequest` 错误返回 403，阻断了首页。仅修改导航回调无法解决。
 
-2026-10-19 三次修复：部分 Android WebView 将 Java Bridge 的空值返回为 JavaScript `undefined`，首次打开时被误判为存储损坏。原生层现在返回版本化空状态标记，页面只将该标记视为新安装空库，其他非法存储仍拒绝。
+资源拦截器现在只对这个精确匹配的内部主文档返回 `null`，让 WebView 自行加载；其他外部请求仍拒绝。相同模拟器修复前出现与用户一致的错误页，修复后首页、答题、SQLite 恢复和系统备份导入导出通过。页面初始化门控与明确空库标记保留；此前“特定手机无法导航合成域名”和“Java null 被转换”是缺少设备验证的诊断假设，不能当作已证实原因。
 
-2026-10-19 四次修复：`loadDataWithBaseURL` 的 `data:` 首页被导航拦截器误判为外部页面，出现 `net::ERR_HTTP_RESPONSE_CODE_FAILURE`。现在只放行这一个本地 bootstrap 文档，外部导航仍全部拒绝。
-
-2026-10-19 修复启动竞态：题库异步加载期间点击“我的”子入口曾触发 `store.getState()` 未定义。现在所有路由在题库与本地状态初始化完成前保持加载状态，备份回调也会提示稍后重试；重新构建 APK 后不再调用半初始化状态。
+模拟器截图还发现原先直接给 WebView 加 padding 时，CSS fixed 底栏仍位于系统导航按钮之下。现在由父容器承接系统边距，实际 WebView 视口避开状态栏与导航栏；最终截图确认底部四个入口完整可见。
 
 ## 安装与使用
 
-安装包：`.local/releases/interview-lab-offline.apk`。将 APK 通过 USB、文件传输等方式复制到手机，在手机文件管理器点击安装；按系统提示允许该文件来源安装。支持 Android 8.0 及以上，需要支持 ES modules 与 top-level await 的较新 Android System WebView（建议保持系统 WebView 更新）。
+安装包：`.local/releases/interview-lab-offline-1.0.1.apk`，同内容兼容入口 `.local/releases/interview-lab-offline.apk`。将 APK 通过 USB、文件传输等方式复制到手机，在手机文件管理器点击安装；按系统提示允许该文件来源安装。覆盖升级保留原应用 ID 与签名，页头及“我的”显示 1.0.1 以便确认更新。支持 Android 8.0 及以上，需要支持 ES modules 与 top-level await 的较新 Android System WebView（建议保持系统 WebView 更新）。
 
 首次安装从空进度开始，内置源码题库 670 题、30 道核心题、100 道简历分层答案，不打包电脑个人进度、数据库连接信息或浏览器草稿。电脑服务与数据库不受影响。
 
@@ -46,10 +44,22 @@ Browser plugin 不可用，使用已有 Playwright + 已安装 Chrome headless�
 
 实际 APK 已完成 javac/D8 编译、zipalign、v2/v3 签名验证、Manifest 无网络权限检查，五个 APK 内资源 SHA256 与最终源文件逐一比对。具体产物 SHA256 由构建脚本输出；密钥与产物在 `.local/`，不提交仓库。
 
-本次最终 APK SHA256：`A8A1F6F38CF205FEC65A31DCC4EF4714F449BDFFF4940E3BF514F1948B6F20DD`。
+## 2026-10-19 Android 实际运行验证
+
+使用 Google AOSP Android 15（API 35）x86_64 模拟器，实际 WebView `124.0.6367.219`。最终 1.0.1 APK 已安装运行，模拟器开启飞行模式后验证以下流程：
+
+- 清空仅模拟器测试应用数据后首次打开，首页正常；实际输入草稿并完成题目，直接通过 Java Bridge 读 SQLite 验证回答已保存。
+- 筛选简历范围显示 100 题，打开备份界面。
+- `am force-stop` 后重新启动，正式回答与本轮位置恢复。
+- 旧版 1.0.0 升级至同签名 1.0.1 后，原先保存的回答保留。
+- 原生系统文档选择器实际导出至 Downloads，导出的 JSON 包含测试正式回答；再次从选择器导入，确认覆盖，恢复成功且回答保留。
+
+新增 `android/tests/SmokeTest.java` 仪器测试与 `android/test-device.ps1`，直接驱动实际 APK 的 WebView/SQLite，无浏览器替身。`write` 与 `restore` 可自动执行；`export` / `import` 等待操作系统文件选择器与确认框。命令与设备限制见 [android/README](../android/README.md)。
+
+本次最终 APK SHA256：`92AD0F8D162985C6AAA767545BA6FC6D3722133BB737F2DC5953FAE060312B19`。同签名、versionCode 2，编译/zipalign/v2/v3 签名及内嵌资源比对通过。本次主机检查：70/70 单元测试（离线状态 12 项）、TypeScript、目标 ESLint、差异检查通过。桌面个人 PostgreSQL 未写入。
 
 ## 当前限制
 
-没有连接安卓真机或模拟器，因此 WebView 真机渲染、系统返回键、SQLite 杀进程恢复与系统文档选择器尚未实测。安装后应先开飞行模式完成一题、退出重开并确认记录，再导出/导入一份备份确认手机行为。
+已在上述 Android 模拟器验证；尚未连接用户实体手机，未覆盖各厂商 WebView、旧版 WebView及全部系统版本。系统返回手势未纳入本次仪器测试。
 
 离线版复盘每条记录目前只包含一个实际问题，多问题分别保存；没有移植桌面版的多问题编辑、并发 revision 合并、服务端分页与跨设备能力。个人卡以点击保存为准，未保存卡片编辑不承诺恢复；模拟没有可选计时。普通完整答案保留 Markdown 标题/列表/代码等阅读内容，外部资料仅提示，不在 App 内联网打开。手机与电脑各自记录，题库内容更新需重新构建 APK。

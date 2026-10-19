@@ -86,5 +86,10 @@ try {
     }
 } finally { $archive.Dispose() }
 Write-Host 'All five embedded asset hashes match mobile/www.'
+[xml]$releaseManifest = Get-Content "$PSScriptRoot/AndroidManifest.xml" -Raw
+$releaseVersion = $releaseManifest.manifest.GetAttribute('versionName', 'http://schemas.android.com/apk/res/android')
+$versionedApk = Join-Path $release "interview-lab-offline-$releaseVersion.apk"
+Copy-Item -LiteralPath $apk -Destination $versionedApk -Force
 Get-FileHash -LiteralPath $apk -Algorithm SHA256
 Write-Host "APK: $apk"
+Write-Host "Versioned APK: $versionedApk"

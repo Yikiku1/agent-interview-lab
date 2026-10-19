@@ -25,14 +25,18 @@ public final class MainActivity extends Activity {
         db = openOrCreateDatabase("practice.db", MODE_PRIVATE, null);
         db.execSQL("CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY CHECK(id=1), json TEXT NOT NULL)");
         web = new WebView(this);
-        web.setPadding(0, 0, 0, 0);
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
+        container.addView(web, new android.widget.FrameLayout.LayoutParams(-1, -1));
         // Insets keep controls clear of Android status/navigation bars, including target 35 edge-to-edge.
-        web.setOnApplyWindowInsetsListener((v, insets) -> {
+        // Apply padding to the parent: WebView padding alone leaves CSS fixed
+        // controls anchored underneath the Android navigation buttons.
+        container.setOnApplyWindowInsetsListener((v, insets) -> {
             v.setPadding(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
                 insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
             return insets.consumeSystemWindowInsets();
         });
-        setContentView(web);
+        setContentView(container);
+        container.requestApplyInsets();
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -61,14 +65,15 @@ public final class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
-                // loadDataWithBaseURL uses a data: document for the bundled
-                // entry page. It is local bootstrap content, not an external
-                // navigation; blocking it produces ERR_HTTP_RESPONSE_CODE_FAILURE.
-                if ("data".equals(uri.getScheme())) return false;
+                if (bootstrapDocument(request)) return false;
                 return !local(uri);
             }
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
+                // Chromium requests this empty main-frame document before it
+                // installs loadDataWithBaseURL content. Let WebView handle it;
+                // returning our 403 here prevents the entire app from loading.
+                if (bootstrapDocument(request)) return null;
                 if (!local(uri) || !"GET".equals(request.getMethod())) return denied();
                 String path = uri.getPath();
                 if (path == null || path.equals("/")) path = "/index.html";
@@ -78,9 +83,8 @@ public final class MainActivity extends Activity {
                 catch (IOException e) { return denied(); }
             }
         });
-        // Some Android WebView builds do not start a top-level navigation to the
-        // synthetic appassets host. Load the bundled document directly while
-        // retaining the HTTPS base URL for module imports and fetch().
+        // Read the bundled entry document directly and keep the HTTPS base URL
+        // for same-origin module imports, fetch(), and persisted browser settings.
         try (InputStream input = getAssets().open("www/index.html")) {
             ByteArrayOutputStream html = new ByteArrayOutputStream();
             byte[] chunk = new byte[8192];
@@ -89,11 +93,17 @@ public final class MainActivity extends Activity {
             web.loadDataWithBaseURL(ORIGIN, html.toString(StandardCharsets.UTF_8.name()),
                 "text/html", "UTF-8", null);
         } catch (IOException error) {
-            web.loadData("<h1>无法读取应用资源</h1><p>请重新安装 APK。</p>", "text/html", "UTF-8");
+            android.widget.TextView message = new android.widget.TextView(this);
+            message.setText("无法读取应用资源，请覆盖安装完整 APK。应用数据已保留。");
+            message.setPadding(24, 48, 24, 24);
+            setContentView(message);
         }
     }
     private boolean local(Uri uri) {
         return "https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost()) && uri.getPort() == -1;
+    }
+    private boolean bootstrapDocument(WebResourceRequest request) {
+        return request.isForMainFrame() && "data:text/html;charset=utf-8;base64,".equals(request.getUrl().toString());
     }
     private WebResourceResponse denied() {
         return new WebResourceResponse("text/plain", "UTF-8", 403, "Blocked", null, new ByteArrayInputStream(new byte[0]));
