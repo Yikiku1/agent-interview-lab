@@ -492,6 +492,7 @@ function backupPage() {
 window.onNativeFileResult = (message) => toast(message);
 window.onNativeImport = (text) =>
   action(() => {
+    if (!store) throw new Error("本地题库仍在加载，请稍后再试");
     if (!confirm("确认用备份替换手机当前记录？此操作不会自动合并。")) return;
     store.importBackup(text);
     render();
@@ -501,6 +502,13 @@ function importText(text) {
   window.onNativeImport(text);
 }
 function render() {
+  // The route can change while the bundled question bank is still loading.
+  // Keep every state-backed page behind the same readiness gate so an early
+  // tap cannot call store.getState() before the native/local store exists.
+  if (!store || !questions || !byId) {
+    app.innerHTML = '<p class="empty">正在打开本地题库…</p>';
+    return;
+  }
   const [path, id] = location.hash.slice(1).split("/");
   const route = path || "home";
   document
