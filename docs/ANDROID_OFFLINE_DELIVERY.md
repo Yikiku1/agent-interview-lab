@@ -2,6 +2,8 @@
 
 更新：2026-10-19（北京时间）。安卓离线版与现有 Next.js / PostgreSQL 桌面版独立，安装后不需要电脑、服务器、登录或网络。
 
+2026-10-19 二次修复：部分 Android WebView 无法直接导航到合成 `appassets.androidplatform.net` 首页，表现为“无法加载”。现在原生壳从 APK 读取 `index.html`，使用同一 HTTPS 基址加载，再由本地拦截器提供 ESM、CSS 和题库资源。
+
 2026-10-19 修复启动竞态：题库异步加载期间点击“我的”子入口曾触发 `store.getState()` 未定义。现在所有路由在题库与本地状态初始化完成前保持加载状态，备份回调也会提示稍后重试；重新构建 APK 后不再调用半初始化状态。
 
 ## 安装与使用
@@ -40,7 +42,7 @@ Browser plugin 不可用，使用已有 Playwright + 已安装 Chrome headless�
 
 实际 APK 已完成 javac/D8 编译、zipalign、v2/v3 签名验证、Manifest 无网络权限检查，五个 APK 内资源 SHA256 与最终源文件逐一比对。具体产物 SHA256 由构建脚本输出；密钥与产物在 `.local/`，不提交仓库。
 
-本次最终 APK SHA256：`15FF5F23235CA790A6CD116FFD12107174941845994615CD3263378CDC1A2B2A`。
+本次最终 APK SHA256：`219BF3E3D07BA151A02A5A6D7B81553FB9C1D68E694B22D93E0F572D27E96F60`。
 
 ## 当前限制
 

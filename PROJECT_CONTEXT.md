@@ -10,6 +10,8 @@
 
 2026-10-19（北京时间）修复安卓离线版启动竞态：题库异步加载期间提前点击“我的”入口会调用未初始化的 `store.getState()`，现由统一 readiness gate 保持加载态；备份回调也在未初始化时明确提示。最终 APK 已重打，SHA256 为 `15FF5F23235CA790A6CD116FFD12107174941845994615CD3263378CDC1A2B2A`。
 
+2026-10-19（北京时间）继续修复部分 Android WebView 直接导航合成 `appassets.androidplatform.net` 失败：原生壳改为从 APK 内读取 `index.html`，以本地 HTTPS 基址加载并继续拦截脚本/样式/题库资源。最终 APK SHA256 为 `219BF3E3D07BA151A02A5A6D7B81553FB9C1D68E694B22D93E0F572D27E96F60`；仍需用户手机实测确认。
+
 2026-10-18（北京时间）新增独立安卓离线版，交付与边界见 [安卓离线版](docs/ANDROID_OFFLINE_DELIVERY.md)。内置源码 670 题/100 题分层答案，Java WebView + 手机私有 SQLite 保存学习状态，已实现短轮/续练/复习/个人卡/卡点/目标/统计/五节点模拟/单问题面试复盘及 JSON 备份。实际签名 APK 位于 `.local/releases/interview-lab-offline.apk`；不读取或打包个人 PostgreSQL 数据，电脑与手机不自动同步。桌面 W0–W7 与 W8 原状态不变。
 
 项目已具备个人面试学习闭环、固定项目模拟、真实面试复盘与本地启动/备份恢复。W0 与 [670 题答案修订](docs/ANSWER_QUALITY_REVISION.md)已在 `3756f01` 提交推送；[W1](docs/JOB_SEEKER_W1_DELIVERY.md) 入口/目标/短轮、[W2](docs/JOB_SEEKER_W2_DELIVERY.md) 简历分层、[W3](docs/JOB_SEEKER_W3_DELIVERY.md) 个人卡/自查/卡点已在 `0e67163` 提交推送；[W4](docs/JOB_SEEKER_W4_DELIVERY.md) 范围正式覆盖已在 `464218d`；[W5](docs/JOB_SEEKER_W5_DELIVERY.md) 两项目五节点模拟已在 `1bbeb7b`；[W6](docs/JOB_SEEKER_W6_DELIVERY.md) 真实复盘与关联补练已在 `a5fa217` 提交推送。2026-10-12 [W7](docs/JOB_SEEKER_W7_DELIVERY.md)完成 Windows 启动、版本化十六表完整备份、显式独立空库恢复与可读导出；已实际恢复个人包并核对 Schema/全部记录/四序列，真实冷启动与重复复用通过。最终应用运行于 3000，原记录保留。每批完成并验证后提交推送，最新 SHA 以 Git 为准；W8 按需评估，本轮未进入。短答起草范围检查通过，未做真人计时。

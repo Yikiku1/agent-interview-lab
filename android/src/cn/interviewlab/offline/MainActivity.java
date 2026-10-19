@@ -72,7 +72,19 @@ public final class MainActivity extends Activity {
                 catch (IOException e) { return denied(); }
             }
         });
-        web.loadUrl(ORIGIN + "index.html");
+        // Some Android WebView builds do not start a top-level navigation to the
+        // synthetic appassets host. Load the bundled document directly while
+        // retaining the HTTPS base URL for module imports and fetch().
+        try (InputStream input = getAssets().open("www/index.html")) {
+            ByteArrayOutputStream html = new ByteArrayOutputStream();
+            byte[] chunk = new byte[8192];
+            int count;
+            while ((count = input.read(chunk)) != -1) html.write(chunk, 0, count);
+            web.loadDataWithBaseURL(ORIGIN, html.toString(StandardCharsets.UTF_8.name()),
+                "text/html", "UTF-8", null);
+        } catch (IOException error) {
+            web.loadData("<h1>无法读取应用资源</h1><p>请重新安装 APK。</p>", "text/html", "UTF-8");
+        }
     }
     private boolean local(Uri uri) {
         return "https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost()) && uri.getPort() == -1;
